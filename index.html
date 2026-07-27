@@ -566,10 +566,38 @@
     }
 
     function deleteTransaction(id) {
-      if (confirm('Apagar lançamento?')) {
-        state.transactions = state.transactions.filter(t => t.id !== id);
-        saveData(); render();
+      const itemOriginal = state.transactions.find(t => t.id === id);
+      if (!itemOriginal) return;
+
+      let apagarFuturos = false;
+      if (itemOriginal.isFixed) {
+        apagarFuturos = confirm("Esta é uma conta fixa!\n\nDeseja apagar APENAS ESTE MÊS ou ESTE MÊS E TODOS OS MESES FUTUROS?\n\n- Clique em [OK] para apagar em TODOS OS MESES FUTUROS.\n- Clique em [Cancelar] para apagar APENAS NESTE MÊS.");
+      } else {
+        if (!confirm('Deseja realmente apagar este lançamento?')) return;
       }
+
+      if (apagarFuturos) {
+        const currentMonthIdx = state.monthsList.indexOf(itemOriginal.month);
+        const groupId = itemOriginal.fixedGroupId || itemOriginal.id;
+        
+        // Remove deste mês em diante para todas as ocorrências que compartilham o mesmo grupo ou id original
+        state.transactions = state.transactions.filter(t => {
+          const matchGroup = (t.fixedGroupId === groupId || t.id === groupId);
+          if (!matchGroup) return true; // Mantém os outros itens
+
+          const tMonthIdx = state.monthsList.indexOf(t.month);
+          // Se o mês do item for anterior ao mês atual da exclusão, mantém ele intacto no passado
+          if (tMonthIdx < currentMonthIdx) return true;
+
+          // Caso contrário, remove (retorna falso)
+          return false;
+        });
+      } else {
+        state.transactions = state.transactions.filter(t => t.id !== id);
+      }
+
+      saveData(); 
+      render();
     }
 
     function editTransaction(id) {
@@ -619,7 +647,7 @@
         const itemOriginal = state.transactions.find(t => t.id === editingId);
         if (itemOriginal) {
           let atualizarFuturos = false;
-          if (itemOriginal.isFixed) {
+          if (itemOriginal.isFixed || isFixed) {
             atualizarFuturos = confirm("Esta é uma conta fixa!\n\nDeseja atualizar ESTE MÊS e TODOS OS MESES FUTUROS?\n\n- Clique em [OK] para alterar em todos os meses futuros.\n- Clique em [Cancelar] para alterar apenas neste mês.");
           }
 
@@ -629,7 +657,6 @@
             
             for (let m = currentMonthIdx; m < state.monthsList.length; m++) {
               const mKey = state.monthsList[m];
-              // Procura pelo ID de grupo vinculado ou pelo id original
               let existing = state.transactions.find(t => t.month === mKey && (t.fixedGroupId === groupId || t.id === groupId));
               
               if (existing) {
@@ -641,7 +668,6 @@
                 existing.isFixed = true;
                 existing.fixedGroupId = groupId;
               } else {
-                // Se não existir o registro em algum mês futuro da série, cria ele automaticamente
                 state.transactions.push({
                   id: Date.now() + m, fixedGroupId: groupId, month: mKey, day, desc, val, cat, tipo: currentType, isFixed: true, pago: false, totalParcelas: 1, parcelaAtual: 1
                 });
