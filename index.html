@@ -616,11 +616,52 @@
       if (!day || !val) return alert('Preencha o Dia e o Valor!');
 
       if (editingId) {
-        const item = state.transactions.find(t => t.id === editingId);
-        if (item) { item.day = day; item.desc = desc; item.val = val; item.cat = cat; item.tipo = currentType; item.isFixed = isFixed; }
+        const itemOriginal = state.transactions.find(t => t.id === editingId);
+        if (itemOriginal) {
+          let atualizarFuturos = false;
+          if (itemOriginal.isFixed) {
+            atualizarFuturos = confirm("Esta é uma conta fixa!\n\nDeseja atualizar ESTE MÊS e TODOS OS MESES FUTUROS?\n\n- Clique em [OK] para alterar em todos os meses futuros.\n- Clique em [Cancelar] para alterar apenas neste mês.");
+          }
+
+          if (atualizarFuturos) {
+            const currentMonthIdx = state.monthsList.indexOf(itemOriginal.month);
+            const groupId = itemOriginal.fixedGroupId || itemOriginal.id;
+            
+            for (let m = currentMonthIdx; m < state.monthsList.length; m++) {
+              const mKey = state.monthsList[m];
+              // Procura pelo ID de grupo vinculado ou pelo id original
+              let existing = state.transactions.find(t => t.month === mKey && (t.fixedGroupId === groupId || t.id === groupId));
+              
+              if (existing) {
+                existing.day = day;
+                existing.desc = desc;
+                existing.val = val;
+                existing.cat = cat;
+                existing.tipo = currentType;
+                existing.isFixed = true;
+                existing.fixedGroupId = groupId;
+              } else {
+                // Se não existir o registro em algum mês futuro da série, cria ele automaticamente
+                state.transactions.push({
+                  id: Date.now() + m, fixedGroupId: groupId, month: mKey, day, desc, val, cat, tipo: currentType, isFixed: true, pago: false, totalParcelas: 1, parcelaAtual: 1
+                });
+              }
+            }
+          } else {
+            itemOriginal.day = day;
+            itemOriginal.desc = desc;
+            itemOriginal.val = val;
+            itemOriginal.cat = cat;
+            itemOriginal.tipo = currentType;
+            itemOriginal.isFixed = isFixed;
+          }
+        }
       } else if (isFixed) {
+        const groupId = Date.now();
         for (let m = state.currentMonthIdx; m < state.monthsList.length; m++) {
-          state.transactions.push({ id: Date.now() + m, month: state.monthsList[m], day, desc, val, cat, tipo: currentType, isFixed: true, pago: false, totalParcelas: 1, parcelaAtual: 1 });
+          state.transactions.push({ 
+            id: groupId + m, fixedGroupId: groupId, month: state.monthsList[m], day, desc, val, cat, tipo: currentType, isFixed: true, pago: false, totalParcelas: 1, parcelaAtual: 1 
+          });
         }
       } else {
         const valParc = installments > 1 ? val / installments : val;
