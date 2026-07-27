@@ -578,16 +578,22 @@
 
       if (apagarFuturos) {
         const currentMonthIdx = state.monthsList.indexOf(itemOriginal.month);
-        const groupId = itemOriginal.fixedGroupId || itemOriginal.id;
+        const groupId = itemOriginal.fixedGroupId;
+        const targetDesc = itemOriginal.desc.trim().toLowerCase();
         
         state.transactions = state.transactions.filter(t => {
-          const matchGroup = (t.fixedGroupId === groupId || t.id === groupId);
-          if (!matchGroup) return true;
-
           const tMonthIdx = state.monthsList.indexOf(t.month);
-          if (tMonthIdx < currentMonthIdx) return true;
+          if (tMonthIdx < currentMonthIdx) return true; // Mantém meses anteriores
 
-          return false;
+          // Verifica se pertence ao mesmo grupo fixo ou se tem exatamente a mesma descrição e é fixa
+          const matchByGroup = (groupId && t.fixedGroupId === groupId);
+          const matchByName = (t.isFixed && t.desc.trim().toLowerCase() === targetDesc);
+
+          if (matchByGroup || matchByName) {
+            return false; // Apaga
+          }
+
+          return true;
         });
       } else {
         state.transactions = state.transactions.filter(t => t.id !== id);
@@ -650,11 +656,12 @@
 
           if (atualizarFuturos) {
             const currentMonthIdx = state.monthsList.indexOf(itemOriginal.month);
-            const groupId = itemOriginal.fixedGroupId || itemOriginal.id;
+            const groupId = itemOriginal.fixedGroupId || Date.now();
+            const originalDesc = itemOriginal.desc.trim().toLowerCase();
             
             for (let m = currentMonthIdx; m < state.monthsList.length; m++) {
               const mKey = state.monthsList[m];
-              let existing = state.transactions.find(t => t.month === mKey && (t.fixedGroupId === groupId || t.id === groupId));
+              let existing = state.transactions.find(t => t.month === mKey && (t.fixedGroupId === groupId || t.desc.trim().toLowerCase() === originalDesc));
               
               if (existing) {
                 existing.day = day;
@@ -740,3 +747,4 @@
   </script>
 </body>
 </html>
+
