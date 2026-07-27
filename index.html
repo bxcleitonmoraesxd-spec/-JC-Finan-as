@@ -580,16 +580,13 @@
         const currentMonthIdx = state.monthsList.indexOf(itemOriginal.month);
         const groupId = itemOriginal.fixedGroupId || itemOriginal.id;
         
-        // Remove deste mês em diante para todas as ocorrências que compartilham o mesmo grupo ou id original
         state.transactions = state.transactions.filter(t => {
           const matchGroup = (t.fixedGroupId === groupId || t.id === groupId);
-          if (!matchGroup) return true; // Mantém os outros itens
+          if (!matchGroup) return true;
 
           const tMonthIdx = state.monthsList.indexOf(t.month);
-          // Se o mês do item for anterior ao mês atual da exclusão, mantém ele intacto no passado
           if (tMonthIdx < currentMonthIdx) return true;
 
-          // Caso contrário, remove (retorna falso)
           return false;
         });
       } else {
