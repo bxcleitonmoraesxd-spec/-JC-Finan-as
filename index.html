@@ -343,16 +343,19 @@
       currentMonthIdx: allMonths.indexOf('jul/26') !== -1 ? allMonths.indexOf('jul/26') : 0,
       monthsList: allMonths,
       familyCode: 'casal_jc',
-      emergencyReserve: { current: 1500.00, target: 10000.00 },
+      emergencyReserve: { current: 1501.00, target: 10000.00 },
       transactions: [
-        { id: 1, month: 'jul/26', day: 1, desc: 'Salário', val: 5500.00, tipo: 'entrada', cat: '💰|Renda', isFixed: true, pago: true, totalParcelas: 1, parcelaAtual: 1 },
-        { id: 2, month: 'jul/26', day: 10, desc: 'Aporte Reserva', val: 300.00, tipo: 'saida', cat: '🛡️|Reserva', isFixed: false, pago: true, totalParcelas: 1, parcelaAtual: 1 },
-        { id: 3, month: 'jul/26', day: 15, desc: 'Internet Fibra', val: 120.00, tipo: 'saida', cat: '💡|Contas', isFixed: true, pago: false, totalParcelas: 1, parcelaAtual: 1 }
+        { id: 1, month: 'mar/26', day: 5, desc: 'Receita Extra', val: 1700.00, tipo: 'saida', cat: '📦|Outros', isFixed: false, pago: false, totalParcelas: 1, parcelaAtual: 1 }
       ]
     };
 
     let state = JSON.parse(localStorage.getItem('fin_app_v5')) || defaultState;
     state.monthsList = allMonths;
+    // Força a meta padrão correta se estiver travada em 1000
+    if (!state.emergencyReserve || state.emergencyReserve.target <= 1000) {
+      state.emergencyReserve = state.emergencyReserve || { current: 0 };
+      state.emergencyReserve.target = 10000.00;
+    }
 
     function saveData() { 
       localStorage.setItem('fin_app_v5', JSON.stringify(state)); 
@@ -377,7 +380,12 @@
           if (doc.exists) {
             const data = doc.data();
             if (data.transactions) state.transactions = data.transactions;
-            if (data.emergencyReserve) state.emergencyReserve = data.emergencyReserve;
+            if (data.emergencyReserve) {
+              if (data.emergencyReserve.target <= 1000) {
+                data.emergencyReserve.target = 10000.00; // Sobrescreve o travamento remoto
+              }
+              state.emergencyReserve = data.emergencyReserve;
+            }
             localStorage.setItem('fin_app_v5', JSON.stringify(state));
             render();
           }
