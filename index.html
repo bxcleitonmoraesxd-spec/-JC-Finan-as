@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>App Finanças Pro - Com Reserva de Emergência</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --primary-orange: #FF4D12;
+      --bg-main: #0F0F12;
+      --card-bg: #1A1A1E;
+      --card-inner: #242429;
+      --text-main: #FFFFFF;
+      --text-gray: #A0A0AB;
+      --border-color: #2E2E35;
+      --green-accent: #00E676;
+      --green-bg: rgba(0, 230, 118, 0.12);
+      --red-accent: #FF5252;
+      --red-bg: rgba(255, 82, 82, 0.12);
+      --yellow-accent: #FFD600;
+      --blue-accent: #29B6F6;
+      --purple-accent: #B388FF;
+      --purple-bg: rgba(179, 136, 255, 0.12);
+    }
+
+    [data-theme="light"] {
+      --bg-main: #F4F4F7;
+      --card-bg: #FFFFFF;
+      --card-inner: #F0F0F5;
+      --text-main: #1C1C1E;
+      --text-gray: #6C6C70;
+      --border-color: #E5E5EA;
+      --green-accent: #10B981;
+      --green-bg: rgba(16, 185, 129, 0.12);
+      --red-accent: #EF4444;
+      --red-bg: rgba(239, 68, 68, 0.12);
+      --purple-accent: #7C4DFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-main); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; transition: background 0.3s; }
+
+    .app-screen { width: 100%; max-width: 414px; height: 100vh; max-height: 896px; background: var(--bg-main); display: flex; flex-direction: column; overflow: hidden; position: relative; border: 1px solid var(--border-color); }
+    @media (min-width: 500px) { .app-screen { height: 844px; border-radius: 44px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); } }
+
+    /* Header */
+    .app-header { padding: 16px 20px 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .month-selector { display: flex; align-items: center; gap: 12px; background: var(--card-bg); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-color); }
+    .month-btn { border: none; background: none; font-size: 1.2rem; color: var(--primary-orange); cursor: pointer; font-weight: 800; }
+    .current-month { font-weight: 800; font-size: 0.95rem; }
+    .header-actions { display: flex; gap: 6px; }
+    .action-btn-head { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); width: 34px; height: 34px; border-radius: 12px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* Card Reserva de Emergência */
+    .emergency-card { margin: 10px 20px 0 20px; background: linear-gradient(135deg, rgba(179, 136, 255, 0.15) 0%, rgba(41, 182, 246, 0.15) 100%); border: 1px solid rgba(179, 136, 255, 0.3); border-radius: 18px; padding: 12px 16px; }
+    .emergency-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .emergency-title { font-size: 0.75rem; font-weight: 800; color: var(--purple-accent); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+    .emergency-values { display: flex; justify-content: space-between; align-items: baseline; }
+    .emergency-current { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
+    .emergency-target { font-size: 0.75rem; font-weight: 700; color: var(--text-gray); }
+    .btn-emergency-action { background: var(--purple-accent); color: #fff; border: none; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
+
+    /* Cards e Métricas */
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 20px 0 20px; }
+    .summary-card { background: var(--card-bg); border-radius: 16px; padding: 10px 12px; border: 1px solid var(--border-color); }
+    .summary-label { font-size: 0.65rem; font-weight: 700; color: var(--text-gray); text-transform: uppercase; }
+    .summary-val { font-size: 0.9rem; font-weight: 800; margin-top: 2px; }
+
+    /* Barra de Progresso */
+    .progress-box { padding: 10px 20px 0 20px; }
+    .progress-info { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--text-gray); margin-bottom: 4px; }
+    .progress-bar-bg { width: 100%; height: 8px; background: var(--card-inner); border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--primary-orange); width: 0%; transition: width 0.3s; }
+
+    /* Filtros e Busca */
+    .filter-box { padding: 10px 20px; display: flex; gap: 8px; flex-direction: column; }
+    .search-input { width: 100%; padding: 8px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.8rem; outline: none; }
+    .filter-tabs { display: flex; gap: 6px; }
+    .filter-btn { flex: 1; padding: 6px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-gray); font-size: 0.7rem; font-weight: 700; cursor: pointer; text-align: center; }
+    .filter-btn.active { background: var(--primary-orange); color: #fff; border-color: var(--primary-orange); }
+
+    /* Lista */
+    .content-area { flex: 1; overflow-y: auto; padding: 0 20px 20px 20px; scrollbar-width: none; }
+    .content-area::-webkit-scrollbar { display: none; }
+
+    .item-card { background: var(--card-bg); border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .item-card.is-paid { border-color: rgba(0, 230, 118, 0.4); background: rgba(0, 230, 118, 0.03); }
+    .item-left { display: flex; align-items: center; gap: 10px; }
+    .cat-icon { font-size: 1.2rem; background: var(--card-inner); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .item-title { font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+    .item-sub { font-size: 0.7rem; color: var(--text-gray); font-weight: 600; }
+    .item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .item-val { font-size: 0.85rem; font-weight: 800; }
+
+    .item-actions { display: flex; gap: 4px; }
+    .btn-icon { background: var(--card-inner); border: 1px solid var(--border-color); color: var(--text-gray); width: 26px; height: 26px; border-radius: 8px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .btn-icon.btn-pay.paid { background: var(--green-bg); color: var(--green-accent); border-color: var(--green-accent); }
+
+    .badge { padding: 2px 5px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; }
+    .badge-entrada { background: var(--green-bg); color: var(--green-accent); }
+    .badge-fixa { background: rgba(41, 182, 246, 0.15); color: var(--blue-accent); }
+    .badge-parcela { background: rgba(255, 214, 0, 0.15); color: var(--yellow-accent); }
+
+    /* Bottom Nav */
+    .bottom-nav { height: 70px; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; position: relative; }
+    .btn-add-main { width: 52px; height: 52px; background: var(--primary-orange); color: #fff; border-radius: 50%; border: none; font-size: 1.6rem; font-weight: 700; cursor: pointer; margin-top: -25px; box-shadow: 0 8px 20px rgba(255, 77, 18, 0.4); }
+
+    /* Modal Sheet */
+    .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; align-items: flex-end; z-index: 100; }
+    .modal-sheet { width: 100%; background: var(--card-bg); border-radius: 28px 28px 0 0; padding: 20px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; max-height: 90vh; overflow-y: auto; }
+    .input-field, .select-field { width: 100%; padding: 10px 12px; background: var(--card-inner); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.85rem; outline: none; font-weight: 600; }
+    
+    .type-selector { display: flex; gap: 8px; }
+    .type-btn { flex: 1; padding: 8px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--card-inner); color: var(--text-gray); font-weight: 700; font-size: 0.75rem; cursor: pointer; }
+    .type-btn.active-saida { background: var(--red-bg); color: var(--red-accent); border-color: var(--red-accent); }
+    .type-btn.active-entrada { background: var(--green-bg); color: var(--green-accent); border-color: var(--green-accent); }
+
+    .checkbox-container { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 700; color: var(--text-gray); }
+    .modal-btns { display: flex; gap: 8px; margin-top: 6px; }
+    .btn-action { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; font-size: 0.85rem; }
+    .btn-cancel { background: var(--card-inner); color: var(--text-gray); }
+    .btn-save { background: var(--primary-orange); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div class="app-screen">
+    <!-- Header -->
+    <div class="app-header">
+      <div class="month-selector">
+        <button class="month-btn" id="prev-month">‹</button>
+        <span class="current-month" id="month-display">jul/26</span>
+        <button class="month-btn" id="next-month">›</button>
+      </div>
+      <div class="header-actions">
+        <button class="action-btn-head" onclick="openShareModal()" title="Compartilhar">🔗</button>
+        <button class="action-btn-head" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
+        <button class="action-btn-head" onclick="exportBackup()" title="Exportar Backup">💾</button>
+        <button class="action-btn-head" onclick="importBackup()" title="Importar Backup">📥</button>
+      </div>
+    </div>
+
+    <!-- Reserva de Emergência -->
+    <div class="emergency-card">
+      <div class="emergency-header">
+        <div class="emergency-title">🛡️ Reserva de Emergência</div>
+        <button class="btn-emergency-action" onclick="openEmergencyModal()">Gerenciar</button>
+      </div>
+      <div class="emergency-values">
+        <div class="emergency-current" id="res-current">R$ 0,00</div>
+        <div class="emergency-target" id="res-target">Meta: R$ 10.000,00</div>
+      </div>
+      <div class="progress-bar-bg" style="margin-top: 8px; height: 6px;">
+        <div class="progress-bar-fill" id="res-fill" style="background: var(--purple-accent); width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">Entradas</div>
+        <div class="summary-val" id="total-entradas" style="color: var(--green-accent)">R$ 0,00</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Saídas (Pagas / Total)</div>
+        <div class="summary-val" id="total-saidas" style="color: var(--red-accent)">R$ 0,00</div>
+      </div>
+    </div>
+
+    <!-- Barra de Progresso do Orçamento -->
+    <div class="progress-box">
+      <div class="progress-info">
+        <span>Uso da Renda no Mês</span>
+        <span id="progress-percent">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Filtros e Busca -->
+    <div class="filter-box">
+      <input type="text" id="search-input" class="search-input" placeholder="🔍 Pesquisar conta ou categoria..." oninput="render()">
+      <div class="filter-tabs">
+        <button class="filter-btn active" id="f-all" onclick="setFilter('all')">Todos</button>
+        <button class="filter-btn" id="f-pending" onclick="setFilter('pending')">Pendentes</button>
+        <button class="filter-btn" id="f-paid" onclick="setFilter('paid')">Pagos</button>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="content-area" id="content-area"></div>
+
+    <!-- Menu Navegação -->
+    <div class="bottom-nav">
+      <button class="btn-add-main" onclick="openModal()">+</button>
+    </div>
+
+    <!-- Modal Lançamentos -->
+    <div class="modal-overlay" id="modal">
+      <div class="modal-sheet">
+        <h3 style="font-size: 1rem; font-weight: 800;" id="modal-title">Novo Lançamento</h3>
+        
+        <div class="type-selector">
+          <button class="type-btn active-saida" id="btn-saida" onclick="setType('saida')">🔴 Saída (Gasto)</button>
+          <button class="type-btn" id="btn-entrada" onclick="setType('entrada')">🟢 Entrada (Ganho)</button>
+        </div>
+
+        <input type="number" id="input-day" class="input-field" placeholder="Dia do Mês (1 a 31)" min="1" max="31">
+        <input type="text" id="input-desc" class="input-field" placeholder="Nome (ex: Mercado, Salário)">
+        <input type="number" step="0.01" id="input-val" class="input-field" placeholder="Valor (R$)">
+
+        <select id="select-cat" class="select-field">
+          <option value="🛒|Mercado">🛒 Mercado / Alimentação</option>
+          <option value="🏠|Moradia">🏠 Moradia / Aluguel</option>
+          <option value="🚗|Transporte">🚗 Transporte / Combustível</option>
+          <option value="🎮|Lazer">🎮 Lazer & Entretenimento</option>
+          <option value="💡|Contas">💡 Contas Fixas / Serviços</option>
+          <option value="🛡️|Reserva">🛡️ Aporte Reserva</option>
+          <option value="💰|Renda">💰 Salário / Rendimentos</option>
+          <option value="📦|Outros">📦 Outros</option>
+        </select>
+
+        <div class="checkbox-container">
+          <input type="checkbox" id="check-fixed">
+          <label for="check-fixed">Conta Fixa? (Repetir nos meses)</label>
+        </div>
+
+        <div id="credit-options">
+          <div class="checkbox-container">
+            <input type="checkbox" id="check-credit" onchange="toggleInstallments(this.checked)">
+            <label for="check-credit">Parcelado no Cartão?</label>
+          </div>
+          <div id="installments-box" style="display: none; margin-top: 4px;">
+            <input type="number" id="input-installments" class="input-field" placeholder="Nº de Parcelas" min="1" value="1">
+          </div>
+        </div>
+
+        <div class="modal-btns">
+          <button class="btn-action btn-cancel" onclick="closeModal()">Cancelar</button>
+          <button class="btn-action btn-save" onclick="saveTransaction()">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Reserva de Emergência -->
+    <div class="modal-overlay" id="modal-emergency">
+      <div class="modal-sheet">
+        <h3 style="font-size: 1rem; font-weight: 800;">🛡️ Gestão da Reserva</h3>
+        
+        <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-gray);">Meta da Reserva (R$):</label>
+        <input type="number" step="0.01" id="input-res-target" class="input-field" placeholder="Ex: 10000">
+
+        <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-gray);">Valor da Operação (R$):</label>
+        <input type="number" step="0.01" id="input-res-val" class="input-field" placeholder="Ex: 200">
+
+        <div class="modal-btns">
+          <button class="btn-action" style="background: var(--red-bg); color: var(--red-accent);" onclick="handleEmergencyOp('withdraw')">Resgatar</button>
+          <button class="btn-action" style="background: var(--green-bg); color: var(--green-accent);" onclick="handleEmergencyOp('deposit')">Guardar (+)</button>
+        </div>
+        <div class="modal-btns">
+          <button class="btn-action btn-cancel" onclick="closeEmergencyModal()">Fechar</button>
+          <button class="btn-action btn-save" onclick="saveResTargetOnly()">Salvar Meta</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Compartilhamento / Sincronização em Tempo Real -->
+    <div class="modal-overlay" id="modal-share">
+      <div class="modal-sheet">
+        <h3 style="font-size: 1rem; font-weight: 800;">🔗 Sincronizar em Tempo Real</h3>
+        <p style="font-size: 0.75rem; color: var(--text-gray); line-height: 1.3;">
+          Insira o mesmo <b>Código da Família/Casal</b> nos dois celulares para compartilhar os dados instantaneamente.
+        </p>
+
+        <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-gray);">Código de Conexão:</label>
+        <input type="text" id="input-family-code" class="input-field" placeholder="Ex: casal123">
+
+        <div class="modal-btns">
+          <button class="btn-action btn-cancel" onclick="closeShareModal()">Cancelar</button>
+          <button class="btn-action btn-save" onclick="connectFamilyCode()">Conectar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <input type="file" id="import-file" style="display: none;" onchange="handleFileImport(event)">
+
+  <script>
+    // --- CONFIGURAÇÃO DO FIREBASE (Sincronização em tempo real) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDemoKeyForPublicTestingOnly12345",
+      authDomain: "jc-financas-demo.firebaseapp.com",
+      projectId: "jc-financas-demo",
+      storageBucket: "jc-financas-demo.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef123456"
+    };
+
+    let db = null;
+    let unsubscribe = null;
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      db = firebase.firestore();
+    } catch (e) {
+      console.log('Firebase offline / local mode active');
+    }
+
+    // --- GERADOR DE MESES ATÉ 2050 ---
+    function generateMonthsUntil2050() {
+      const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+      const list = [];
+      const startYear = 2024;
+      const endYear = 2050;
+
+      for (let y = startYear; y <= endYear; y++) {
+        const yearShort = String(y).slice(-2);
+        for (let m = 0; m < 12; m++) {
+          list.push(`${months[m]}/${yearShort}`);
+        }
+      }
+      return list;
+    }
+
+    const allMonths = generateMonthsUntil2050();
+
+    let currentType = 'saida'; 
+    let editingId = null;
+    let currentFilter = 'all';
+
+    const defaultState = {
+      theme: 'dark',
+      currentMonthIdx: allMonths.indexOf('jul/26') !== -1 ? allMonths.indexOf('jul/26') : 0,
+      monthsList: allMonths,
+      familyCode: 'casal_jc',
+      emergencyReserve: { current: 1500.00, target: 10000.00 },
+      transactions: [
+        { id: 1, month: 'jul/26', day: 1, desc: 'Salário', val: 5500.00, tipo: 'entrada', cat: '💰|Renda', isFixed: true, pago: true, totalParcelas: 1, parcelaAtual: 1 },
+        { id: 2, month: 'jul/26', day: 10, desc: 'Aporte Reserva', val: 300.00, tipo: 'saida', cat: '🛡️|Reserva', isFixed: false, pago: true, totalParcelas: 1, parcelaAtual: 1 },
+        { id: 3, month: 'jul/26', day: 15, desc: 'Internet Fibra', val: 120.00, tipo: 'saida', cat: '💡|Contas', isFixed: true, pago: false, totalParcelas: 1, parcelaAtual: 1 }
+      ]
+    };
+
+    let state = JSON.parse(localStorage.getItem('fin_app_v5')) || defaultState;
+    state.monthsList = allMonths; // Garante a lista completa até 2050
+
+    function saveData() { 
+      localStorage.setItem('fin_app_v5', JSON.stringify(state)); 
+      syncToFirebase();
+    }
+
+    function syncToFirebase() {
+      if (!db || !state.familyCode) return;
+      db.collection('financas_casal').doc(state.familyCode).set({
+        emergencyReserve: state.emergencyReserve,
+        transactions: state.transactions,
+        updatedAt: Date.now()
+      }, { merge: true }).catch(err => console.log("Firebase Save Error:", err));
+    }
+
+    function initFirebaseListener() {
+      if (!db || !state.familyCode) return;
+      if (unsubscribe) unsubscribe();
+
+      unsubscribe = db.collection('financas_casal').doc(state.familyCode)
+        .onSnapshot((doc) => {
+          if (doc.exists) {
+            const data = doc.data();
+            if (data.transactions) state.transactions = data.transactions;
+            if (data.emergencyReserve) state.emergencyReserve = data.emergencyReserve;
+            localStorage.setItem('fin_app_v5', JSON.stringify(state));
+            render();
+          }
+        }, (err) => console.log("Firebase Sync Error:", err));
+    }
+
+    function toggleTheme() {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', state.theme);
+      saveData();
+    }
+    if (state.theme) document.body.setAttribute('data-theme', state.theme);
+
+    function formatCurrency(val) {
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`f-${f}`).classList.add('active');
+      render();
+    }
+
+    function setType(type) {
+      currentType = type;
+      document.getElementById('btn-saida').className = type === 'saida' ? 'type-btn active-saida' : 'type-btn';
+      document.getElementById('btn-entrada').className = type === 'entrada' ? 'type-btn active-entrada' : 'type-btn';
+      document.getElementById('credit-options').style.display = type === 'saida' ? 'block' : 'none';
+    }
+
+    function render() {
+      const monthKey = state.monthsList[state.currentMonthIdx];
+      document.getElementById('month-display').innerText = monthKey;
+
+      // Render Reserva de Emergência
+      if (!state.emergencyReserve) state.emergencyReserve = { current: 0, target: 10000 };
+      document.getElementById('res-current').innerText = formatCurrency(state.emergencyReserve.current);
+      document.getElementById('res-target').innerText = `Meta: ${formatCurrency(state.emergencyReserve.target)}`;
+      const resPct = Math.min(Math.round((state.emergencyReserve.current / (state.emergencyReserve.target || 1)) * 100), 100);
+      document.getElementById('res-fill').style.width = `${resPct}%`;
+
+      const container = document.getElementById('content-area');
+      const searchText = document.getElementById('search-input').value.toLowerCase();
+
+      let items = state.transactions.filter(t => t.month === monthKey);
+
+      if (currentFilter === 'pending') items = items.filter(t => !t.pago);
+      if (currentFilter === 'paid') items = items.filter(t => t.pago);
+      if (searchText) items = items.filter(t => t.desc.toLowerCase().includes(searchText) || t.cat.toLowerCase().includes(searchText));
+
+      let totalEntradas = 0, totalSaidas = 0, totalSaidasPagas = 0;
+
+      state.transactions.filter(t => t.month === monthKey).forEach(item => {
+        if (item.tipo === 'entrada') totalEntradas += item.val;
+        else {
+          totalSaidas += item.val;
+          if (item.pago) totalSaidasPagas += item.val;
+        }
+      });
+
+      // Progresso do Orçamento
+      const usagePercent = totalEntradas > 0 ? Math.min(Math.round((totalSaidas / totalEntradas) * 100), 100) : 0;
+      document.getElementById('progress-percent').innerText = `${usagePercent}%`;
+      document.getElementById('progress-fill').style.width = `${usagePercent}%`;
+
+      container.innerHTML = '';
+
+      if (items.length === 0) {
+        container.innerHTML = `<div style="color: var(--text-gray); font-size: 0.8rem; text-align: center; margin-top: 30px;">Nenhum lançamento encontrado.</div>`;
+      } else {
+        items.forEach(item => {
+          const isEntrada = item.tipo === 'entrada';
+          const [icon] = (item.cat || '📦|Outros').split('|');
+
+          container.innerHTML += `
+            <div class="item-card ${item.pago ? 'is-paid' : ''}">
+              <div class="item-left">
+                <div class="cat-icon">${icon}</div>
+                <div>
+                  <div class="item-title">
+                    ${item.desc}
+                    ${isEntrada ? `<span class="badge badge-entrada">Entrada</span>` : ''}
+                    ${item.isFixed ? `<span class="badge badge-fixa">Fixa</span>` : ''}
+                    ${item.totalParcelas > 1 ? `<span class="badge badge-parcela">${item.parcelaAtual}/${item.totalParcelas}x</span>` : ''}
+                  </div>
+                  <div class="item-sub">Dia ${item.day}</div>
+                </div>
+              </div>
+              <div class="item-right">
+                <div class="item-val" style="color: ${isEntrada || item.pago ? 'var(--green-accent)' : 'var(--red-accent)'}">
+                  ${isEntrada ? '+' : '-'}${formatCurrency(item.val)}
+                </div>
+                <div class="item-actions">
+                  <button class="btn-icon btn-pay ${item.pago ? 'paid' : ''}" onclick="toggleStatus(${item.id})">${item.pago ? '✓' : '◯'}</button>
+                  <button class="btn-icon" onclick="editTransaction(${item.id})">✏️</button>
+                  <button class="btn-icon" onclick="deleteTransaction(${item.id})">🗑️</button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      document.getElementById('total-entradas').innerText = formatCurrency(totalEntradas);
+      document.getElementById('total-saidas').innerText = `${formatCurrency(totalSaidasPagas)} / ${formatCurrency(totalSaidas)}`;
+    }
+
+    /* Modal Compartilhamento */
+    function openShareModal() {
+      document.getElementById('input-family-code').value = state.familyCode || 'casal_jc';
+      document.getElementById('modal-share').style.display = 'flex';
+    }
+    function closeShareModal() { document.getElementById('modal-share').style.display = 'none'; }
+
+    function connectFamilyCode() {
+      const code = document.getElementById('input-family-code').value.trim().toLowerCase();
+      if (!code) return alert('Digite um código válido!');
+      state.familyCode = code;
+      saveData();
+      initFirebaseListener();
+      closeShareModal();
+      alert(`Conectado ao código "${code}". Digite este mesmo código no outro celular!`);
+    }
+
+    /* Lógica Reserva */
+    function openEmergencyModal() {
+      document.getElementById('input-res-target').value = state.emergencyReserve.target;
+      document.getElementById('input-res-val').value = '';
+      document.getElementById('modal-emergency').style.display = 'flex';
+    }
+    function closeEmergencyModal() { document.getElementById('modal-emergency').style.display = 'none'; }
+
+    function saveResTargetOnly() {
+      const t = parseFloat(document.getElementById('input-res-target').value);
+      if (t > 0) state.emergencyReserve.target = t;
+      saveData(); closeEmergencyModal(); render();
+    }
+
+    function handleEmergencyOp(type) {
+      const val = parseFloat(document.getElementById('input-res-val').value);
+      const target = parseFloat(document.getElementById('input-res-target').value);
+
+      if (target > 0) state.emergencyReserve.target = target;
+
+      if (!val || val <= 0) {
+        saveData(); closeEmergencyModal(); render();
+        return;
+      }
+
+      const today = new Date().getDate();
+      const monthKey = state.monthsList[state.currentMonthIdx];
+
+      if (type === 'deposit') {
+        state.emergencyReserve.current += val;
+        // Lança como saída no mês
+        state.transactions.push({
+          id: Date.now(), month: monthKey, day: today, desc: 'Aporte Reserva', val: val, cat: '🛡️|Reserva', tipo: 'saida', isFixed: false, pago: true, totalParcelas: 1, parcelaAtual: 1
+        });
+      } else {
+        if (val > state.emergencyReserve.current) return alert('Saldo insuficiente na reserva!');
+        state.emergencyReserve.current -= val;
+        // Lança como entrada no mês
+        state.transactions.push({
+          id: Date.now(), month: monthKey, day: today, desc: 'Resgate Reserva', val: val, cat: '🛡️|Reserva', tipo: 'entrada', isFixed: false, pago: true, totalParcelas: 1, parcelaAtual: 1
+        });
+      }
+
+      saveData(); closeEmergencyModal(); render();
+    }
+
+    function toggleStatus(id) {
+      const item = state.transactions.find(t => t.id === id);
+      if (item) { item.pago = !item.pago; saveData(); render(); }
+    }
+
+    function deleteTransaction(id) {
+      if (confirm('Apagar lançamento?')) {
+        state.transactions = state.transactions.filter(t => t.id !== id);
+        saveData(); render();
+      }
+    }
+
+    function editTransaction(id) {
+      const item = state.transactions.find(t => t.id === id);
+      if (!item) return;
+
+      editingId = id;
+      document.getElementById('modal-title').innerText = 'Editar Lançamento';
+      document.getElementById('input-day').value = item.day;
+      document.getElementById('input-desc').value = item.desc;
+      document.getElementById('input-val').value = item.val;
+      document.getElementById('select-cat').value = item.cat || '📦|Outros';
+      document.getElementById('check-fixed').checked = !!item.isFixed;
+
+      setType(item.tipo);
+      document.getElementById('credit-options').style.display = 'none';
+      openModal();
+    }
+
+    function openModal() { document.getElementById('modal').style.display = 'flex'; }
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+      editingId = null;
+      document.getElementById('input-day').value = '';
+      document.getElementById('input-desc').value = '';
+      document.getElementById('input-val').value = '';
+      document.getElementById('check-fixed').checked = false;
+      document.getElementById('check-credit').checked = false;
+      toggleInstallments(false);
+      setType('saida');
+    }
+
+    function toggleInstallments(chk) { document.getElementById('installments-box').style.display = chk ? 'block' : 'none'; }
+
+    function saveTransaction() {
+      const day = parseInt(document.getElementById('input-day').value);
+      const desc = document.getElementById('input-desc').value || (currentType === 'entrada' ? 'Receita Extra' : 'Gasto');
+      const val = parseFloat(document.getElementById('input-val').value);
+      const cat = document.getElementById('select-cat').value;
+      const isFixed = document.getElementById('check-fixed').checked;
+      const isCredit = document.getElementById('check-credit').checked;
+      const installments = (currentType === 'saida' && isCredit && !editingId && !isFixed) ? (parseInt(document.getElementById('input-installments').value) || 1) : 1;
+
+      if (!day || !val) return alert('Preencha o Dia e o Valor!');
+
+      if (editingId) {
+        const item = state.transactions.find(t => t.id === editingId);
+        if (item) { item.day = day; item.desc = desc; item.val = val; item.cat = cat; item.tipo = currentType; item.isFixed = isFixed; }
+      } else if (isFixed) {
+        for (let m = state.currentMonthIdx; m < state.monthsList.length; m++) {
+          state.transactions.push({ id: Date.now() + m, month: state.monthsList[m], day, desc, val, cat, tipo: currentType, isFixed: true, pago: false, totalParcelas: 1, parcelaAtual: 1 });
+        }
+      } else {
+        const valParc = installments > 1 ? val / installments : val;
+        let mIdx = state.currentMonthIdx;
+        for (let i = 1; i <= installments; i++) {
+          if (mIdx < state.monthsList.length) {
+            state.transactions.push({ id: Date.now() + i, month: state.monthsList[mIdx], day, desc, val: valParc, cat, tipo: currentType, isFixed: false, pago: false, totalParcelas: installments, parcelaAtual: i });
+            mIdx++;
+          }
+        }
+      }
+
+      saveData(); closeModal(); render();
+    }
+
+    // Backup & Restore
+    function exportBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `backup_financas_${getCurrentMonthKey().replace('/', '_')}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importBackup() { document.getElementById('import-file').click(); }
+
+    function handleFileImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const importedData = JSON.parse(evt.target.result);
+          if (importedData.transactions) {
+            state = importedData;
+            state.monthsList = allMonths;
+            saveData();
+            render();
+          }
+        } catch (err) { alert('Arquivo JSON inválido!'); }
+      };
+      reader.readAsText(file);
+    }
+
+    function getCurrentMonthKey() { return state.monthsList[state.currentMonthIdx]; }
+
+    document.getElementById('prev-month').onclick = () => { if (state.currentMonthIdx > 0) { state.currentMonthIdx--; render(); } };
+    document.getElementById('next-month').onclick = () => { if (state.currentMonthIdx < state.monthsList.length - 1) { state.currentMonthIdx++; render(); } };
+
+    initFirebaseListener();
+    render();
+  </script>
+</body>
+</html>
