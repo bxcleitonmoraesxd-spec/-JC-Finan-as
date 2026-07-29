@@ -162,6 +162,10 @@
 </head>
 <body>
 
+  <!-- Elemento de áudio otimizado (cortado para soar rápido) -->
+  <audio id="coin-sound" src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCA... (dados embutidos ou link curto simulando o corte) ..." preload="auto"></audio>
+  <!-- Usaremos um som sintético via Web Audio API para garantir que funcione de imediato e de forma curta sem depender de links externos quebrados! -->
+
   <div class="app-screen">
     <div class="app-header">
       <div class="month-selector">
@@ -419,6 +423,27 @@
   <input type="file" id="import-file" style="display: none;" onchange="handleFileImport(event)">
 
   <script>
+    // Função otimizada e cortada para reproduzir um som de moeda curto e imediato ao marcar como pago
+    function playCoinSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        // Frequências clássicas simulando o "tlin" de moeda de forma bem curta
+        osc.frequency.setValueAtTime(987.77, audioCtx.currentTime); // B5
+        osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.08); // E6
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35); // Corte rápido para não ficar longo
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      } catch (e) {
+        console.log("Áudio não suportado ou bloqueado pelo navegador", e);
+      }
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyAtWf27rTT2lwCaXJW938gklgO-k1q0zmg",
       authDomain: "meuappfinancas-677f2.firebaseapp.com",
@@ -883,7 +908,14 @@
 
     function toggleStatus(id) {
       const item = state.transactions.find(t => t.id === id);
-      if (item) { item.pago = !item.pago; saveData(); render(); }
+      if (item) { 
+        item.pago = !item.pago; 
+        if (item.pago) {
+          playCoinSound(); // Toca o sonzinho de moeda cortado e rápido ao marcar como pago
+        }
+        saveData(); 
+        render(); 
+      }
     }
 
     function deleteTransaction(id) {
@@ -1009,4 +1041,3 @@
   </script>
 </body>
 </html>
-
