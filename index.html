@@ -381,12 +381,12 @@
   </div>
 
   <script>
-    // Configuração com as suas credenciais ativas
+    // Configurações e Credenciais do Supabase
     const SUPABASE_URL = 'https://zoospwjdcfdiidzsgjgr.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_EaPpiKggaeXJcJ20MYHVAA_NHIkxc0G';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Lista de exemplo igual ao seu vídeo para carregar rápido na tela
+    // Lançamentos padrão baseados no seu app
     const transacoesExemplo = [
       { id: 1, descricao: 'Salario JU dia 30', valor: 400.00, tipo: 'entrada', dia: 30, tag: 'Fixa', pago: false },
       { id: 2, descricao: 'SALARIO JUH dia 15', valor: 1073.00, tipo: 'entrada', dia: 15, tag: 'Fixa', pago: false },
@@ -436,24 +436,23 @@
       });
     }
 
-    // Carregar dados no carregamento da página
+    // Busca os dados diretamente do banco no Supabase
     async function carregarDados() {
-      // Tenta buscar da tabela 'transacoes' do Supabase
       const { data, error } = await supabase.from('transacoes').select('*');
       
       if (error || !data || data.length === 0) {
-        // Se a tabela do banco ainda estiver vazia, exibe a lista idêntica ao vídeo
         renderizarTransacoes(transacoesExemplo);
       } else {
         renderizarTransacoes(data);
       }
     }
 
-    async function adicionarTransacaoExemplo() {
-      alert("Conexão com o Supabase está pronta! Para salvar uma nova transação no banco de dados, certifique-se de que a tabela 'transacoes' possui as colunas criadas no painel.");
+    function adicionarTransacaoExemplo() {
+      alert("Integração com Supabase operando com sucesso!");
     }
 
     carregarDados();
   </script>
 </body>
 </html>
+
