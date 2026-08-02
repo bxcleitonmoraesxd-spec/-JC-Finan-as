@@ -89,7 +89,7 @@
         <option value="receita">Entrada (+)</option>
         <option value="despesa">Saída (-)</option>
       </select>
-      <button onclick="adicionarLancamento()">Adicionar Registros</button>
+      <button onclick="adicionarLancamento()">Adicionar Registro</button>
 
       <!-- LISTA DE REGISTROS -->
       <h3>Histórico</h3>
@@ -100,7 +100,7 @@
   <script>
     // 1. CONEXÃO COM O SUPABASE
     const SUPABASE_URL = 'https://pgvgtdqduawecoxvxbez.supabase.co';
-    const SUPABASE_KEY = 'SUA_ANON_KEY_AQUI'; // <--- COLE SUA ANON KEY AQUI
+    const SUPABASE_KEY = 'Sb_publishable_rer4A_EyoSj6GsnooUaB9w_od2wzjgQ'; 
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let modoCadastro = false;
@@ -108,10 +108,10 @@
 
     // 2. MENSAGEM MOTIVACIONAL DIÁRIA
     const frases = [
-      "Pequenos economias hoje geram grandes conquistas amanhã!",
+      "Pequenas economias hoje geram grandes conquistas amanhã!",
       "Quem controla o próprio orçamento domina o seu futuro.",
       "Anote cada centavo: a clareza traz tranquilidade financeira.",
-      "Evite compras por impulso. Espere 24h antes de fechar o carrinho!",
+      "Evite compras por impulso. Espere 24h antes de fechar a compra!",
       "Sua disciplina de hoje é a sua liberdade financeira de amanhã.",
       "Saber para onde o dinheiro vai é o primeiro passo para fazê-lo render."
     ];
@@ -161,26 +161,55 @@
     }
     checarSessao();
 
-    // 4. LÓGICA DE FINANÇAS
-    function adicionarLancamento() {
+    // 4. BANCO DE DADOS (SUPABASE)
+    async function carregarLancamentos() {
+      const { data, error } = await supabase
+        .from('transacoes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar dados:', error);
+      } else {
+        lancamentos = data || [];
+        renderizarFinancas();
+      }
+    }
+
+    async function adicionarLancamento() {
       const desc = document.getElementById('descricao').value;
       const val = parseFloat(document.getElementById('valor').value);
       const tipo = document.getElementById('tipo').value;
 
       if (!desc || isNaN(val) || val <= 0) return alert('Informe uma descrição e um valor válido!');
 
-      const item = { id: Date.now(), desc, val, tipo };
-      lancamentos.push(item);
-      
-      document.getElementById('descricao').value = '';
-      document.getElementById('valor').value = '';
-      
-      renderizarFinancas();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { data, error } = await supabase
+        .from('transacoes')
+        .insert([{ descricao: desc, valor: val, tipo: tipo, user_id: user.id }])
+        .select();
+
+      if (error) {
+        alert('Erro ao salvar no banco: ' + error.message);
+      } else {
+        document.getElementById('descricao').value = '';
+        document.getElementById('valor').value = '';
+        carregarLancamentos();
+      }
     }
 
-    function removerLancamento(id) {
-      lancamentos = lancamentos.filter(item => item.id !== id);
-      renderizarFinancas();
+    async function removerLancamento(id) {
+      const { error } = await supabase
+        .from('transacoes')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('Erro ao deletar: ' + error.message);
+      } else {
+        carregarLancamentos();
+      }
     }
 
     function renderizarFinancas() {
@@ -191,16 +220,17 @@
       let saidas = 0;
 
       lancamentos.forEach(item => {
-        if (item.tipo === 'receita') entradas += item.val;
-        else saidas += item.val;
+        const val = parseFloat(item.valor);
+        if (item.tipo === 'receita') entradas += val;
+        else saidas += val;
 
         const li = document.createElement('li');
         li.innerHTML = `
-          <span>${item.desc}</span>
+          <span>${item.descricao}</span>
           <strong class="${item.tipo === 'receita' ? 'verde' : 'vermelho'}">
-            ${item.tipo === 'receita' ? '+' : '-'} R$ ${item.val.toFixed(2)}
+            ${item.tipo === 'receita' ? '+' : '-'} R$ ${val.toFixed(2)}
           </strong>
-          <button class="btn-danger btn-excluir" onclick="removerLancamento(${item.id})">x</button>
+          <button class="btn-danger btn-excluir" onclick="removerLancamento('${item.id}')">x</button>
         `;
         lista.appendChild(li);
       });
@@ -232,4 +262,3 @@
   </script>
 </body>
 </html>
-
