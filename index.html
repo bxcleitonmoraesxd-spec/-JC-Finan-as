@@ -5,14 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>JC Finanças Pro</title>
   
-  <!-- Configurações PWA (Aplicativo) -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="JC Finanças">
   <meta name="theme-color" content="#0F0F12">
 
-  <!-- Ícones e Manifest -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5501/5501375.png">
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/5501/5501375.png">
@@ -181,7 +179,7 @@
 </head>
 <body>
 
-  <!-- Tela de Login Local -->
+  <!-- Tela de Login -->
   <div class="login-screen" id="login-screen">
     <div class="login-box">
       <div class="login-title">JC Finanças Pro</div>
@@ -308,14 +306,14 @@
       <div class="content-area">
         <div class="config-section" id="install-app-section" style="display: none;">
           <div class="config-title">📱 Baixar Aplicativo</div>
-          <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">Instale o JC Finanças Pro direto no seu celular para acessar de forma rápida.</p>
+          <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">Instale o JC Finanças Pro direto no seu celular.</p>
           <button class="btn-action btn-save" onclick="installAppPrompt()">Instalar App na Tela de Início</button>
         </div>
 
         <div class="config-section">
           <div class="config-title">🔔 Lembrete Diário & Motivação</div>
           <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">
-            Receba lembretes no seu celular com frases motivacionais para não esquecer de registrar suas contas do dia.
+            Receba lembretes no seu celular com frases motivacionais.
           </p>
           <button class="btn-action btn-save" onclick="activarNotificacoes()">
             Ativar Lembrete Motivacional
@@ -334,6 +332,7 @@
           <div style="display: flex; gap: 8px; flex-direction: column;">
             <button class="btn-action btn-cancel" onclick="exportBackup()">Exportar Dados (Backup)</button>
             <button class="btn-action btn-cancel" onclick="importBackup()" style="color: var(--red-accent);">Restaurar Dados</button>
+            <button class="btn-action btn-cancel" onclick="limparTudo()" style="color: var(--red-accent); border-color: var(--red-accent);">Zerar Minha Conta Totalmente</button>
           </div>
         </div>
       </div>
@@ -436,7 +435,6 @@
   <input type="file" id="import-file" style="display: none;" onchange="handleFileImport(event)">
 
   <script>
-    // Suporte PWA
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -457,7 +455,6 @@
       }
     }
 
-    // Notificações Motivacionais
     const mensagensMotivacionais = [
       "💡 Pequenos hábitos diários geram grandes conquistas financeiras! Já anotou seus gastos de hoje?",
       "🎯 Cuidar do seu dinheiro hoje é garantir a sua liberdade amanhã. O que entrou ou saiu hoje?",
@@ -477,7 +474,6 @@
       });
     }
 
-    // ESTRUTURA ZERADA PADRÃO PARA NOVOS USUÁRIOS
     function createEmptyUserStore() {
       return {
         theme: 'dark',
@@ -493,7 +489,7 @@
     let state = null;
 
     function loadUserData(username) {
-      const savedKey = "jc_fin_v7_" + username.toLowerCase();
+      const savedKey = "jc_fin_v8_" + username.toLowerCase();
       const rawData = localStorage.getItem(savedKey);
       if (rawData) {
         state = JSON.parse(rawData);
@@ -506,7 +502,7 @@
     function saveData() { 
       const user = sessionStorage.getItem("usuario_logado");
       if (user) {
-        localStorage.setItem("jc_fin_v7_" + user.toLowerCase(), JSON.stringify(state)); 
+        localStorage.setItem("jc_fin_v8_" + user.toLowerCase(), JSON.stringify(state)); 
       }
     }
 
@@ -518,9 +514,7 @@
       if (localStorage.getItem("user_pass_" + u) !== null) return alert("Usuário já existe! Faça login.");
 
       localStorage.setItem("user_pass_" + u, p);
-      
-      // Cria a base zerada para esse novo usuário
-      localStorage.setItem("jc_fin_v7_" + u, JSON.stringify(createEmptyUserStore()));
+      localStorage.setItem("jc_fin_v8_" + u, JSON.stringify(createEmptyUserStore()));
 
       alert("Conta criada com sucesso! Clique em Entrar.");
     }
@@ -549,6 +543,15 @@
       sessionStorage.removeItem("usuario_logado");
       state = null;
       document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    function limparTudo() {
+      if (confirm("Tem certeza que deseja apagar TODOS os seus lançamentos desta conta? Essa ação não pode ser desfeita.")) {
+        state = createEmptyUserStore();
+        saveData();
+        render();
+        alert("Sua conta foi zerada com sucesso!");
+      }
     }
 
     function playCoinSound() {
@@ -1018,7 +1021,6 @@
     document.getElementById('prev-month').onclick = () => { if (state && state.currentMonthIdx > 0) { state.currentMonthIdx--; render(); } };
     document.getElementById('next-month').onclick = () => { if (state && state.currentMonthIdx < state.monthsList.length - 1) { state.currentMonthIdx++; render(); } };
 
-    // Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(()=>{});
     }
