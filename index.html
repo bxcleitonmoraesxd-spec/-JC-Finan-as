@@ -12,7 +12,8 @@
   <meta name="apple-mobile-web-app-title" content="JC Finanças">
   <meta name="theme-color" content="#0F0F12">
 
-  <!-- Ícone do App -->
+  <!-- Ícones e Manifest -->
+  <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5501/5501375.png">
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/5501/5501375.png">
 
@@ -54,40 +55,31 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
     
     html, body {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       background-color: var(--bg-main);
       color: var(--text-main);
       overflow: hidden;
     }
 
-    /* Tela de Login Local */
     .login-screen {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background: var(--bg-main);
       z-index: 300;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
       padding: 24px;
     }
     .login-box {
-      width: 100%;
-      max-width: 320px;
+      width: 100%; max-width: 320px;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 20px;
-      padding: 24px;
+      border-radius: 20px; padding: 24px;
       text-align: center;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
     .login-title {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--primary-orange);
-      margin-bottom: 20px;
+      font-size: 1.4rem; font-weight: 800;
+      color: var(--primary-orange); margin-bottom: 20px;
     }
 
     .app-screen { width: 100%; height: 100%; background: var(--bg-main); display: flex; flex-direction: column; overflow: hidden; position: relative; }
@@ -185,10 +177,6 @@
     .btn-action { flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; font-size: 0.9rem; text-align: center; }
     .btn-cancel { background: var(--card-inner); color: var(--text-gray); }
     .btn-save { background: var(--primary-orange); color: #fff; }
-
-    .onboarding-screen { position: absolute; inset: 0; background: var(--bg-main); z-index: 200; display: none; flex-direction: column; padding: 24px 20px; overflow-y: auto; }
-    .onboarding-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; color: var(--primary-orange); }
-    .onboarding-sub { font-size: 0.85rem; color: var(--text-gray); margin-bottom: 20px; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -211,7 +199,7 @@
     <div class="app-header">
       <div class="month-selector">
         <button class="month-btn" id="prev-month">‹</button>
-        <span class="current-month" id="month-display">jun/26</span>
+        <span class="current-month" id="month-display">ago/26</span>
         <button class="month-btn" id="next-month">›</button>
       </div>
       <div class="header-actions">
@@ -318,14 +306,12 @@
 
     <div class="view-panel" id="view-menu">
       <div class="content-area">
-        <!-- Instalação PWA -->
         <div class="config-section" id="install-app-section" style="display: none;">
           <div class="config-title">📱 Baixar Aplicativo</div>
           <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">Instale o JC Finanças Pro direto no seu celular para acessar de forma rápida.</p>
           <button class="btn-action btn-save" onclick="installAppPrompt()">Instalar App na Tela de Início</button>
         </div>
 
-        <!-- Notificações Motivacionais -->
         <div class="config-section">
           <div class="config-title">🔔 Lembrete Diário & Motivação</div>
           <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">
@@ -334,12 +320,6 @@
           <button class="btn-action btn-save" onclick="activarNotificacoes()">
             Ativar Lembrete Motivacional
           </button>
-        </div>
-
-        <div class="config-section">
-          <div class="config-title">🚀 Questionário & Velocímetro</div>
-          <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">Refaça o questionário inicial para recalcular sua meta de gastos e padrão de vida diário.</p>
-          <button class="btn-action btn-save" onclick="startOnboarding()">Refazer Onboarding</button>
         </div>
 
         <div class="config-section">
@@ -363,24 +343,14 @@
       <button class="btn-add-main" onclick="openModal()">+</button>
     </div>
 
-    <div class="onboarding-screen" id="onboarding-screen">
-      <div class="onboarding-title" id="onb-title">Bem-vindo ao JC Finanças ✨</div>
-      <div class="onboarding-sub" id="onb-sub">Vamos configurar sua previsibilidade financeira diária em poucos passos rápidos.</div>
-      <div id="onb-step-content" style="flex: 1; display: flex; flex-direction: column; gap: 12px; justify-content: center;"></div>
-      <div style="margin-top: 20px;">
-        <button class="btn-action btn-save" onclick="nextOnboardingStep()" id="onb-next-btn">Continuar</button>
-      </div>
-    </div>
-
+    <!-- Modais -->
     <div class="modal-overlay" id="modal">
       <div class="modal-sheet">
         <h3 style="font-size: 1.1rem; font-weight: 800;" id="modal-title">Novo Lançamento</h3>
-        
         <div class="type-selector">
           <button class="type-btn active-saida" id="btn-saida" onclick="setType('saida')">🔴 Saída (Gasto)</button>
           <button class="type-btn" id="btn-entrada" onclick="setType('entrada')">🟢 Entrada (Ganho)</button>
         </div>
-
         <input type="number" id="input-day" class="input-field" placeholder="Dia do Mês (1 a 31)" min="1" max="31">
         <input type="text" id="input-desc" class="input-field" placeholder="Nome (ex: Mercado, Salário)">
         <input type="number" step="0.01" id="input-val" class="input-field" placeholder="Valor (R$)">
@@ -427,7 +397,7 @@
         <h3 style="font-size: 1.1rem; font-weight: 800;">💳 Adicionar Cartão de Crédito</h3>
         <input type="text" id="input-card-name" class="input-field" placeholder="Nome do Cartão (ex: Nubank, Visa)">
         <input type="number" id="input-card-limit" class="input-field" placeholder="Limite Total (R$)">
-        <input type="number" id="input-card-due" class="input-field" placeholder="Dia de Fechamento da Fatura (1 a 31)" min="1" max="31">
+        <input type="number" id="input-card-due" class="input-field" placeholder="Dia de Fechamento (1 a 31)" min="1" max="31">
         <div class="modal-btns">
           <button class="btn-action btn-cancel" onclick="closeCardModal()">Cancelar</button>
           <button class="btn-action btn-save" onclick="saveCardModal()">Salvar Cartão</button>
@@ -439,7 +409,7 @@
       <div class="modal-sheet">
         <h3 style="font-size: 1.1rem; font-weight: 800;">🎯 Alterar Meta da Reserva</h3>
         <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-gray);">Nova Meta (R$):</label>
-        <input type="number" step="0.01" id="input-modal-meta" class="input-field" placeholder="Ex: 15000">
+        <input type="number" step="0.01" id="input-modal-meta" class="input-field" placeholder="Ex: 10000">
         <div class="modal-btns">
           <button class="btn-action btn-cancel" onclick="closeMetaModal()">Cancelar</button>
           <button class="btn-action btn-save" onclick="saveMetaModal()">Salvar Meta</button>
@@ -461,13 +431,12 @@
         </div>
       </div>
     </div>
-
   </div>
 
   <input type="file" id="import-file" style="display: none;" onchange="handleFileImport(event)">
 
   <script>
-    // Suporte para Instalação App (PWA)
+    // Suporte PWA
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -488,7 +457,7 @@
       }
     }
 
-    // Sistema de Notificações Motivacionais Diárias
+    // Notificações Motivacionais
     const mensagensMotivacionais = [
       "💡 Pequenos hábitos diários geram grandes conquistas financeiras! Já anotou seus gastos de hoje?",
       "🎯 Cuidar do seu dinheiro hoje é garantir a sua liberdade amanhã. O que entrou ou saiu hoje?",
@@ -498,48 +467,77 @@
     ];
 
     function activarNotificacoes() {
-      if (!("Notification" in window)) {
-        alert("Seu navegador ou dispositivo não suporta notificações de tela.");
-        return;
-      }
-
+      if (!("Notification" in window)) return alert("Dispositivo não suporta notificações de tela.");
       Notification.requestPermission().then((perm) => {
         if (perm === "granted") {
           const msg = mensagensMotivacionais[Math.floor(Math.random() * mensagensMotivacionais.length)];
-          new Notification("JC Finanças Pro 💰", {
-            body: msg,
-            icon: "https://cdn-icons-png.flaticon.com/512/5501/5501375.png"
-          });
-          alert("🔔 Lembretes ativados com sucesso! Você receberá mensagens diárias para manter o foco.");
-        } else {
-          alert("A permissão de notificação foi negada no seu navegador.");
-        }
+          new Notification("JC Finanças Pro 💰", { body: msg, icon: "https://cdn-icons-png.flaticon.com/512/5501/5501375.png" });
+          alert("🔔 Lembretes ativados com sucesso!");
+        } else alert("Permissão de notificação negada.");
       });
     }
 
-    // Sistema de Login Local
+    // ESTRUTURA ZERADA PADRÃO PARA NOVOS USUÁRIOS
+    function createEmptyUserStore() {
+      return {
+        theme: 'dark',
+        currentMonthIdx: allMonths.indexOf('ago/26') !== -1 ? allMonths.indexOf('ago/26') : 0,
+        monthsList: allMonths,
+        emergencyReserve: { current: 0.00, target: 0.00 },
+        customTags: ['!pagar', '!urgente'],
+        creditCards: [],
+        transactions: []
+      };
+    }
+
+    let state = null;
+
+    function loadUserData(username) {
+      const savedKey = "jc_fin_v7_" + username.toLowerCase();
+      const rawData = localStorage.getItem(savedKey);
+      if (rawData) {
+        state = JSON.parse(rawData);
+      } else {
+        state = createEmptyUserStore();
+      }
+      state.monthsList = allMonths;
+    }
+
+    function saveData() { 
+      const user = sessionStorage.getItem("usuario_logado");
+      if (user) {
+        localStorage.setItem("jc_fin_v7_" + user.toLowerCase(), JSON.stringify(state)); 
+      }
+    }
+
     function criarContaLocal() {
-      const u = document.getElementById('login-user').value.trim();
+      const u = document.getElementById('login-user').value.trim().toLowerCase();
       const p = document.getElementById('login-pass').value.trim();
 
       if (!u || !p) return alert("Preencha Usuário e Senha!");
+      if (localStorage.getItem("user_pass_" + u) !== null) return alert("Usuário já existe! Faça login.");
+
+      localStorage.setItem("user_pass_" + u, p);
       
-      localStorage.setItem("user_" + u, p);
+      // Cria a base zerada para esse novo usuário
+      localStorage.setItem("jc_fin_v7_" + u, JSON.stringify(createEmptyUserStore()));
+
       alert("Conta criada com sucesso! Clique em Entrar.");
     }
 
     function fazerLogin() {
-      const u = document.getElementById('login-user').value.trim();
+      const u = document.getElementById('login-user').value.trim().toLowerCase();
       const p = document.getElementById('login-pass').value.trim();
 
       if (!u || !p) return alert("Preencha Usuário e Senha!");
 
-      const passSalva = localStorage.getItem("user_" + u);
+      const passSalva = localStorage.getItem("user_pass_" + u);
 
       if (passSalva === null) {
         alert("Usuário não cadastrado. Clique em 'Criar Conta'.");
       } else if (passSalva === p) {
         sessionStorage.setItem("usuario_logado", u);
+        loadUserData(u);
         document.getElementById('login-screen').style.display = 'none';
         render();
       } else {
@@ -549,10 +547,10 @@
 
     function deslogar() {
       sessionStorage.removeItem("usuario_logado");
+      state = null;
       document.getElementById('login-screen').style.display = 'flex';
     }
 
-    // Toca som curto ao marcar como pago
     function playCoinSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -563,13 +561,9 @@
         osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.08);
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.35);
-      } catch (e) {
-        console.log("Áudio não ativado", e);
-      }
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+      } catch (e) {}
     }
 
     function generateMonthsUntil2050() {
@@ -577,9 +571,7 @@
       const list = [];
       for (let y = 2024; y <= 2050; y++) {
         const yearShort = String(y).slice(-2);
-        for (let m = 0; m < 12; m++) {
-          list.push(`${months[m]}/${yearShort}`);
-        }
+        for (let m = 0; m < 12; m++) list.push(`${months[m]}/${yearShort}`);
       }
       return list;
     }
@@ -590,40 +582,16 @@
     let editingId = null;
     let currentFilter = 'all';
     let currentView = 'lancamentos';
-    let onboardingStep = 0;
-
-    const defaultState = {
-      theme: 'dark',
-      currentMonthIdx: allMonths.indexOf('jun/26') !== -1 ? allMonths.indexOf('jun/26') : 0,
-      monthsList: allMonths,
-      emergencyReserve: { current: 1501.00, target: 10000.00 },
-      customTags: ['!pagar', '!viagem', '!urgente'],
-      creditCards: [
-        { id: 1, name: 'Nubank', limit: 5000, dueDay: 10 }
-      ],
-      transactions: [
-        { id: 1, month: 'jun/26', day: 5, desc: 'Salário', val: 5000.00, tipo: 'entrada', cat: '💰|Renda', isFixed: false, pago: true, totalParcelas: 1, parcelaAtual: 1, tag: '' },
-        { id: 2, month: 'jun/26', day: 10, desc: 'Aluguel', val: 1500.00, tipo: 'saida', cat: '🏠|Moradia', isFixed: true, pago: false, totalParcelas: 1, parcelaAtual: 1, tag: '!pagar' }
-      ],
-      onboardingDone: true
-    };
-
-    let state = JSON.parse(localStorage.getItem('jc_fin_v7')) || defaultState;
-    state.monthsList = allMonths;
-
-    function saveData() { 
-      localStorage.setItem('jc_fin_v7', JSON.stringify(state)); 
-    }
 
     function toggleTheme() {
+      if (!state) return;
       state.theme = state.theme === 'dark' ? 'light' : 'dark';
       document.body.setAttribute('data-theme', state.theme);
       saveData();
     }
-    if (state.theme) document.body.setAttribute('data-theme', state.theme);
 
     function formatCurrency(val) {
-      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
     }
 
     function switchView(viewName) {
@@ -652,19 +620,23 @@
     }
 
     function render() {
-      if (!sessionStorage.getItem("usuario_logado")) {
+      const activeUser = sessionStorage.getItem("usuario_logado");
+      if (!activeUser) {
         document.getElementById('login-screen').style.display = 'flex';
         return;
       } else {
         document.getElementById('login-screen').style.display = 'none';
+        if (!state) loadUserData(activeUser);
       }
+
+      document.body.setAttribute('data-theme', state.theme || 'dark');
 
       const monthKey = state.monthsList[state.currentMonthIdx];
       document.getElementById('month-display').innerText = monthKey;
 
       document.getElementById('res-current').innerText = formatCurrency(state.emergencyReserve.current);
       document.getElementById('res-target-txt').innerText = `Meta: ${formatCurrency(state.emergencyReserve.target)}`;
-      const resPct = Math.min(Math.round((state.emergencyReserve.current / (state.emergencyReserve.target || 1)) * 100), 100);
+      const resPct = state.emergencyReserve.target > 0 ? Math.min(Math.round((state.emergencyReserve.current / state.emergencyReserve.target) * 100), 100) : 0;
       document.getElementById('res-fill').style.width = `${resPct}%`;
 
       updateTagsUI();
@@ -708,7 +680,7 @@
 
       container.innerHTML = '';
       if (items.length === 0) {
-        container.innerHTML = `<div style="color: var(--text-gray); font-size: 0.85rem; text-align: center; margin-top: 30px;">Nenhum lançamento encontrado.</div>`;
+        container.innerHTML = `<div style="color: var(--text-gray); font-size: 0.85rem; text-align: center; margin-top: 30px;">Nenhum lançamento cadastrado neste mês.</div>`;
         return;
       }
 
@@ -864,48 +836,6 @@
       }
     }
 
-    function startOnboarding() {
-      onboardingStep = 1;
-      document.getElementById('onboarding-screen').style.display = 'flex';
-      renderOnboardingStep();
-    }
-
-    function renderOnboardingStep() {
-      const title = document.getElementById('onb-title');
-      const sub = document.getElementById('onb-sub');
-      const content = document.getElementById('onb-step-content');
-
-      if (onboardingStep === 1) {
-        title.innerText = "✨ Velocímetro de Gastos";
-        sub.innerText = "Defina sua previsão de gastos mensais com Alimentação e Mercado.";
-        content.innerHTML = `<input type="number" id="onb-val-1" class="input-field" placeholder="Ex: 1200.00" value="1200">`;
-      } else if (onboardingStep === 2) {
-        title.innerText = "🏠 Custos de Moradia";
-        sub.innerText = "Quanto você gasta mensalmente com aluguel, condomínio e contas fixas?";
-        content.innerHTML = `<input type="number" id="onb-val-2" class="input-field" placeholder="Ex: 1800.00" value="1800">`;
-      } else if (onboardingStep === 3) {
-        title.innerText = "🎯 Saldo Atual na Conta";
-        sub.innerText = "Insira o saldo atual disponível nas suas contas para alinhar a projeção.";
-        content.innerHTML = `<input type="number" id="onb-val-3" class="input-field" placeholder="Ex: 3500.00" value="3500">`;
-      } else {
-        document.getElementById('onboarding-screen').style.display = 'none';
-        state.onboardingDone = true;
-        saveData();
-        render();
-      }
-    }
-
-    function nextOnboardingStep() {
-      onboardingStep++;
-      if (onboardingStep <= 3) {
-        renderOnboardingStep();
-      } else {
-        document.getElementById('onboarding-screen').style.display = 'none';
-        saveData();
-        render();
-      }
-    }
-
     function openCardModal() { document.getElementById('modal-card').style.display = 'flex'; }
     function closeCardModal() { document.getElementById('modal-card').style.display = 'none'; }
     function saveCardModal() {
@@ -925,13 +855,13 @@
     }
 
     function openMetaModal() {
-      document.getElementById('input-modal-meta').value = state.emergencyReserve.target;
+      document.getElementById('input-modal-meta').value = state.emergencyReserve.target || '';
       document.getElementById('modal-meta').style.display = 'flex';
     }
     function closeMetaModal() { document.getElementById('modal-meta').style.display = 'none'; }
     function saveMetaModal() {
       const novaMeta = parseFloat(document.getElementById('input-modal-meta').value);
-      if (!novaMeta || novaMeta <= 0) return alert('Digite um valor válido!');
+      if (isNaN(novaMeta) || novaMeta < 0) return alert('Digite um valor válido!');
       state.emergencyReserve.target = novaMeta;
       saveData();
       closeMetaModal();
@@ -971,7 +901,7 @@
     }
 
     function deleteTransaction(id) {
-      if (confirm('Deseja realmente apagar este lançamento?')) {
+      if (confirm('Deseja apagar este lançamento?')) {
         state.transactions = state.transactions.filter(t => t.id !== id);
         saveData();
         render();
@@ -1021,7 +951,7 @@
       const isCredit = document.getElementById('check-credit').checked;
       const installments = (currentType === 'saida' && isCredit && !editingId && !isFixed) ? (parseInt(document.getElementById('input-installments').value) || 1) : 1;
 
-      if (!day || !val) return alert('Preencha o Dia e o Valor!');
+      if (!day || isNaN(val)) return alert('Preencha o Dia e o Valor!');
 
       if (editingId) {
         const itemOriginal = state.transactions.find(t => t.id === editingId);
@@ -1059,7 +989,7 @@
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `backup_financas_${state.monthsList[state.currentMonthIdx].replace('/', '_')}.json`);
+      downloadAnchor.setAttribute("download", `backup_financas_${sessionStorage.getItem("usuario_logado")}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -1085,8 +1015,13 @@
       reader.readAsText(file);
     }
 
-    document.getElementById('prev-month').onclick = () => { if (state.currentMonthIdx > 0) { state.currentMonthIdx--; render(); } };
-    document.getElementById('next-month').onclick = () => { if (state.currentMonthIdx < state.monthsList.length - 1) { state.currentMonthIdx++; render(); } };
+    document.getElementById('prev-month').onclick = () => { if (state && state.currentMonthIdx > 0) { state.currentMonthIdx--; render(); } };
+    document.getElementById('next-month').onclick = () => { if (state && state.currentMonthIdx < state.monthsList.length - 1) { state.currentMonthIdx++; render(); } };
+
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
 
     render();
   </script>
