@@ -11,10 +11,6 @@
   <meta name="theme-color" content="#0F0F12">
 
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
     :root {
@@ -59,8 +55,8 @@
       overflow: hidden;
     }
 
-    /* Auth Screen */
-    .auth-screen {
+    /* Tela de Login Local */
+    .login-screen {
       position: absolute;
       inset: 0;
       background: var(--bg-main);
@@ -68,23 +64,24 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      align-items: center;
       padding: 24px;
     }
-    .auth-card {
+    .login-box {
+      width: 100%;
+      max-width: 320px;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 20px;
       padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
-    .auth-title {
-      font-size: 1.5rem;
+    .login-title {
+      font-size: 1.4rem;
       font-weight: 800;
       color: var(--primary-orange);
-      text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 20px;
     }
 
     .app-screen { width: 100%; height: 100%; background: var(--bg-main); display: flex; flex-direction: column; overflow: hidden; position: relative; }
@@ -190,14 +187,17 @@
 </head>
 <body>
 
-  <!-- Tela de Login e Cadastro -->
-  <div class="auth-screen" id="auth-screen">
-    <div class="auth-card">
-      <div class="auth-title">JC Finanças Pro</div>
-      <input type="email" id="auth-email" class="input-field" placeholder="E-mail">
-      <input type="password" id="auth-pass" class="input-field" placeholder="Senha">
-      <button class="btn-action btn-save" onclick="handleLogin()">Entrar</button>
-      <button class="btn-action btn-cancel" onclick="handleRegister()">Criar Conta</button>
+  <!-- Tela de Login Local -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-box">
+      <div class="login-title">JC Finanças Pro</div>
+      <input type="text" id="login-user" class="input-field" placeholder="Usuário" style="margin-bottom: 10px;">
+      <input type="password" id="login-pass" class="input-field" placeholder="Senha" style="margin-bottom: 14px;">
+      
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-action btn-save" onclick="fazerLogin()">Entrar</button>
+        <button class="btn-action btn-cancel" onclick="criarContaLocal()">Criar Conta</button>
+      </div>
     </div>
   </div>
 
@@ -209,12 +209,10 @@
         <button class="month-btn" id="next-month">›</button>
       </div>
       <div class="header-actions">
-        <button class="action-btn-head" id="btn-pwa-install" onclick="installApp()" title="Baixar App" style="display:none;">📲</button>
-        <button class="action-btn-head" onclick="openShareModal()" title="Sincronizar Casal">🔗</button>
         <button class="action-btn-head" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
         <button class="action-btn-head" onclick="exportBackup()" title="Exportar Backup">💾</button>
         <button class="action-btn-head" onclick="importBackup()" title="Importar Backup">📥</button>
-        <button class="action-btn-head" onclick="handleLogout()" title="Sair">🚪</button>
+        <button class="action-btn-head" onclick="deslogar()" title="Sair">🚪</button>
       </div>
     </div>
 
@@ -315,9 +313,9 @@
     <div class="view-panel" id="view-menu">
       <div class="content-area">
         <div class="config-section">
-          <div class="config-title">🚀 Instalação do Aplicativo</div>
-          <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">Instale o JC Finanças como app no seu celular para ter acesso rápido sem navegador.</p>
-          <button class="btn-action btn-save" onclick="installApp()">Instalar Aplicativo</button>
+          <div class="config-title">🚀 Questionário & Velocímetro</div>
+          <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">Refaça o questionário inicial para recalcular sua meta de gastos e padrão de vida diário.</p>
+          <button class="btn-action btn-save" onclick="startOnboarding()">Refazer Onboarding</button>
         </div>
 
         <div class="config-section">
@@ -440,50 +438,47 @@
       </div>
     </div>
 
-    <div class="modal-overlay" id="modal-share">
-      <div class="modal-sheet">
-        <h3 style="font-size: 1.1rem; font-weight: 800;">🔗 Sincronizar em Tempo Real</h3>
-        <p style="font-size: 0.8rem; color: var(--text-gray); line-height: 1.4;">
-          Insira o mesmo <b>Código da Família/Casal</b> nos dois celulares para compartilhar os dados instantaneamente.
-        </p>
-        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-gray);">Código de Conexão:</label>
-        <input type="text" id="input-family-code" class="input-field" placeholder="Ex: casal123">
-        <div class="modal-btns">
-          <button class="btn-action btn-cancel" onclick="closeShareModal()">Cancelar</button>
-          <button class="btn-action btn-save" onclick="connectFamilyCode()">Conectar</button>
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <input type="file" id="import-file" style="display: none;" onchange="handleFileImport(event)">
 
   <script>
-    // Gerenciador PWA (Download do App)
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const btn = document.getElementById('btn-pwa-install');
-      if (btn) btn.style.display = 'flex';
-    });
+    // Sistema de Login Local
+    function criarContaLocal() {
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value.trim();
 
-    function installApp() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('App instalado com sucesso');
-          }
-          deferredPrompt = null;
-        });
+      if (!u || !p) return alert("Preencha Usuário e Senha!");
+      
+      localStorage.setItem("user_" + u, p);
+      alert("Conta criada com sucesso! Clique em Entrar.");
+    }
+
+    function fazerLogin() {
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value.trim();
+
+      if (!u || !p) return alert("Preencha Usuário e Senha!");
+
+      const passSalva = localStorage.getItem("user_" + u);
+
+      if (passSalva === null) {
+        alert("Usuário não cadastrado. Clique em 'Criar Conta'.");
+      } else if (passSalva === p) {
+        sessionStorage.setItem("usuario_logado", u);
+        document.getElementById('login-screen').style.display = 'none';
+        render();
       } else {
-        alert('Para instalar o aplicativo no seu dispositivo:\n\n- No Chrome/Android: toque nos 3 pontos e em "Adicionar à tela inicial".\n- No Safari/iOS: toque no botão Compartilhar e selecione "Adicionar à Tela de Início".');
+        alert("Senha incorreta!");
       }
     }
 
-    // Som de moeda via Web Audio API
+    function deslogar() {
+      sessionStorage.removeItem("usuario_logado");
+      document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    // Toca som curto ao marcar como pago
     function playCoinSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -499,74 +494,14 @@
         osc.start();
         osc.stop(audioCtx.currentTime + 0.35);
       } catch (e) {
-        console.log("Áudio não suportado ou bloqueado", e);
+        console.log("Áudio não ativado", e);
       }
-    }
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAtWf27rTT2lwCaXJW938gklgO-k1q0zmg",
-      authDomain: "meuappfinancas-677f2.firebaseapp.com",
-      projectId: "meuappfinancas-677f2",
-      storageBucket: "meuappfinancas-677f2.firebasestorage.app",
-      messagingSenderId: "1059011214822",
-      appId: "1:1059011214822:web:8bc37b2218cc4309546a27",
-      measurementId: "G-09Q56Y44WH"
-    };
-
-    let db = null;
-    let auth = null;
-    let unsubscribe = null;
-
-    try {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-      db = firebase.firestore();
-      auth = firebase.auth();
-    } catch (e) {
-      console.log('Modo offline/local ativo');
-    }
-
-    // Gerenciador de Autenticação
-    if (auth) {
-      auth.onAuthStateChanged((user) => {
-        const authScreen = document.getElementById('auth-screen');
-        if (user) {
-          authScreen.style.display = 'none';
-          initFirebaseListener();
-        } else {
-          authScreen.style.display = 'flex';
-        }
-      });
-    }
-
-    function handleLogin() {
-      const email = document.getElementById('auth-email').value;
-      const pass = document.getElementById('auth-pass').value;
-      if (!email || !pass) return alert('Preencha e-mail e senha.');
-      auth.signInWithEmailAndPassword(email, pass).catch(err => alert('Erro no login: ' + err.message));
-    }
-
-    function handleRegister() {
-      const email = document.getElementById('auth-email').value;
-      const pass = document.getElementById('auth-pass').value;
-      if (!email || !pass) return alert('Preencha e-mail e senha.');
-      auth.createUserWithEmailAndPassword(email, pass).then(() => {
-        alert('Conta criada com sucesso!');
-      }).catch(err => alert('Erro no cadastro: ' + err.message));
-    }
-
-    function handleLogout() {
-      if (auth) auth.signOut();
     }
 
     function generateMonthsUntil2050() {
       const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
       const list = [];
-      const startYear = 2024;
-      const endYear = 2050;
-
-      for (let y = startYear; y <= endYear; y++) {
+      for (let y = 2024; y <= 2050; y++) {
         const yearShort = String(y).slice(-2);
         for (let m = 0; m < 12; m++) {
           list.push(`${months[m]}/${yearShort}`);
@@ -581,12 +516,12 @@
     let editingId = null;
     let currentFilter = 'all';
     let currentView = 'lancamentos';
+    let onboardingStep = 0;
 
     const defaultState = {
       theme: 'dark',
       currentMonthIdx: allMonths.indexOf('jun/26') !== -1 ? allMonths.indexOf('jun/26') : 0,
       monthsList: allMonths,
-      familyCode: 'casal_jc',
       emergencyReserve: { current: 1501.00, target: 10000.00 },
       customTags: ['!pagar', '!viagem', '!urgente'],
       creditCards: [
@@ -595,47 +530,15 @@
       transactions: [
         { id: 1, month: 'jun/26', day: 5, desc: 'Salário', val: 5000.00, tipo: 'entrada', cat: '💰|Renda', isFixed: false, pago: true, totalParcelas: 1, parcelaAtual: 1, tag: '' },
         { id: 2, month: 'jun/26', day: 10, desc: 'Aluguel', val: 1500.00, tipo: 'saida', cat: '🏠|Moradia', isFixed: true, pago: false, totalParcelas: 1, parcelaAtual: 1, tag: '!pagar' }
-      ]
+      ],
+      onboardingDone: true
     };
 
     let state = JSON.parse(localStorage.getItem('jc_fin_v7')) || defaultState;
     state.monthsList = allMonths;
-    if (!state.emergencyReserve) state.emergencyReserve = { current: 0, target: 10000.00 };
-    if (!state.customTags) state.customTags = ['!pagar', '!viagem'];
-    if (!state.creditCards) state.creditCards = [];
 
     function saveData() { 
       localStorage.setItem('jc_fin_v7', JSON.stringify(state)); 
-      syncToFirebase();
-    }
-
-    function syncToFirebase() {
-      if (!db || !state.familyCode) return;
-      db.collection('financas_casal').doc(state.familyCode).set({
-        emergencyReserve: state.emergencyReserve,
-        transactions: state.transactions,
-        customTags: state.customTags,
-        creditCards: state.creditCards,
-        updatedAt: Date.now()
-      }, { merge: true }).catch(err => console.log("Firebase Save Error:", err));
-    }
-
-    function initFirebaseListener() {
-      if (!db || !state.familyCode) return;
-      if (unsubscribe) unsubscribe();
-
-      unsubscribe = db.collection('financas_casal').doc(state.familyCode)
-        .onSnapshot((doc) => {
-          if (doc.exists) {
-            const data = doc.data();
-            if (data.transactions) state.transactions = data.transactions;
-            if (data.emergencyReserve) state.emergencyReserve = data.emergencyReserve;
-            if (data.customTags) state.customTags = data.customTags;
-            if (data.creditCards) state.creditCards = data.creditCards;
-            localStorage.setItem('jc_fin_v7', JSON.stringify(state));
-            render();
-          }
-        }, (err) => console.log("Firebase Sync Error:", err));
     }
 
     function toggleTheme() {
@@ -675,10 +578,16 @@
     }
 
     function render() {
+      if (!sessionStorage.getItem("usuario_logado")) {
+        document.getElementById('login-screen').style.display = 'flex';
+        return;
+      } else {
+        document.getElementById('login-screen').style.display = 'none';
+      }
+
       const monthKey = state.monthsList[state.currentMonthIdx];
       document.getElementById('month-display').innerText = monthKey;
 
-      if (!state.emergencyReserve) state.emergencyReserve = { current: 0, target: 10000 };
       document.getElementById('res-current').innerText = formatCurrency(state.emergencyReserve.current);
       document.getElementById('res-target-txt').innerText = `Meta: ${formatCurrency(state.emergencyReserve.target)}`;
       const resPct = Math.min(Math.round((state.emergencyReserve.current / (state.emergencyReserve.target || 1)) * 100), 100);
@@ -686,15 +595,10 @@
 
       updateTagsUI();
 
-      if (currentView === 'lancamentos') {
-        renderLancamentos(monthKey);
-      } else if (currentView === 'calendario') {
-        renderCalendarioMatrix(monthKey);
-      } else if (currentView === 'horizonte') {
-        renderHorizonte();
-      } else if (currentView === 'cartoes') {
-        renderCartoes();
-      }
+      if (currentView === 'lancamentos') renderLancamentos(monthKey);
+      else if (currentView === 'calendario') renderCalendarioMatrix(monthKey);
+      else if (currentView === 'horizonte') renderHorizonte();
+      else if (currentView === 'cartoes') renderCartoes();
     }
 
     function renderLancamentos(monthKey) {
@@ -790,9 +694,7 @@
         });
 
         let semaphorClass = '';
-        if (daySaidas > 0) {
-          semaphorClass = hasPaid ? 'semaphor-green' : 'semaphor-red';
-        }
+        if (daySaidas > 0) semaphorClass = hasPaid ? 'semaphor-green' : 'semaphor-red';
 
         grid.innerHTML += `
           <div class="cal-day-cell ${semaphorClass}" onclick="jumpToDay(${day})">
@@ -888,6 +790,48 @@
       }
     }
 
+    function startOnboarding() {
+      onboardingStep = 1;
+      document.getElementById('onboarding-screen').style.display = 'flex';
+      renderOnboardingStep();
+    }
+
+    function renderOnboardingStep() {
+      const title = document.getElementById('onb-title');
+      const sub = document.getElementById('onb-sub');
+      const content = document.getElementById('onb-step-content');
+
+      if (onboardingStep === 1) {
+        title.innerText = "✨ Velocímetro de Gastos";
+        sub.innerText = "Defina sua previsão de gastos mensais com Alimentação e Mercado.";
+        content.innerHTML = `<input type="number" id="onb-val-1" class="input-field" placeholder="Ex: 1200.00" value="1200">`;
+      } else if (onboardingStep === 2) {
+        title.innerText = "🏠 Custos de Moradia";
+        sub.innerText = "Quanto você gasta mensalmente com aluguel, condomínio e contas fixas?";
+        content.innerHTML = `<input type="number" id="onb-val-2" class="input-field" placeholder="Ex: 1800.00" value="1800">`;
+      } else if (onboardingStep === 3) {
+        title.innerText = "🎯 Saldo Atual na Conta";
+        sub.innerText = "Insira o saldo atual disponível nas suas contas para alinhar a projeção.";
+        content.innerHTML = `<input type="number" id="onb-val-3" class="input-field" placeholder="Ex: 3500.00" value="3500">`;
+      } else {
+        document.getElementById('onboarding-screen').style.display = 'none';
+        state.onboardingDone = true;
+        saveData();
+        render();
+      }
+    }
+
+    function nextOnboardingStep() {
+      onboardingStep++;
+      if (onboardingStep <= 3) {
+        renderOnboardingStep();
+      } else {
+        document.getElementById('onboarding-screen').style.display = 'none';
+        saveData();
+        render();
+      }
+    }
+
     function openCardModal() { document.getElementById('modal-card').style.display = 'flex'; }
     function closeCardModal() { document.getElementById('modal-card').style.display = 'none'; }
     function saveCardModal() {
@@ -920,21 +864,6 @@
       render();
     }
 
-    function openShareModal() {
-      document.getElementById('input-family-code').value = state.familyCode || 'casal_jc';
-      document.getElementById('modal-share').style.display = 'flex';
-    }
-    function closeShareModal() { document.getElementById('modal-share').style.display = 'none'; }
-    function connectFamilyCode() {
-      const code = document.getElementById('input-family-code').value.trim().toLowerCase();
-      if (!code) return alert('Digite um código válido!');
-      state.familyCode = code;
-      saveData();
-      initFirebaseListener();
-      closeShareModal();
-      alert(`Conectado ao código "${code}".`);
-    }
-
     function openEmergencyModal() {
       document.getElementById('input-res-val').value = '';
       document.getElementById('modal-emergency').style.display = 'flex';
@@ -961,9 +890,7 @@
       const item = state.transactions.find(t => t.id === id);
       if (item) { 
         item.pago = !item.pago; 
-        if (item.pago) {
-          playCoinSound();
-        }
+        if (item.pago) playCoinSound();
         saveData(); 
         render(); 
       }
