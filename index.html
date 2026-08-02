@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>JC Finanças Pro</title>
   
+  <!-- Configurações PWA (Aplicativo) -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="JC Finanças">
   <meta name="theme-color" content="#0F0F12">
+
+  <!-- Ícone do App -->
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5501/5501375.png">
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/5501/5501375.png">
 
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -312,6 +318,24 @@
 
     <div class="view-panel" id="view-menu">
       <div class="content-area">
+        <!-- Instalação PWA -->
+        <div class="config-section" id="install-app-section" style="display: none;">
+          <div class="config-title">📱 Baixar Aplicativo</div>
+          <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">Instale o JC Finanças Pro direto no seu celular para acessar de forma rápida.</p>
+          <button class="btn-action btn-save" onclick="installAppPrompt()">Instalar App na Tela de Início</button>
+        </div>
+
+        <!-- Notificações Motivacionais -->
+        <div class="config-section">
+          <div class="config-title">🔔 Lembrete Diário & Motivação</div>
+          <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">
+            Receba lembretes no seu celular com frases motivacionais para não esquecer de registrar suas contas do dia.
+          </p>
+          <button class="btn-action btn-save" onclick="activarNotificacoes()">
+            Ativar Lembrete Motivacional
+          </button>
+        </div>
+
         <div class="config-section">
           <div class="config-title">🚀 Questionário & Velocímetro</div>
           <p style="font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px;">Refaça o questionário inicial para recalcular sua meta de gastos e padrão de vida diário.</p>
@@ -443,6 +467,56 @@
   <input type="file" id="import-file" style="display: none;" onchange="handleFileImport(event)">
 
   <script>
+    // Suporte para Instalação App (PWA)
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBox = document.getElementById('install-app-section');
+      if (installBox) installBox.style.display = 'block';
+    });
+
+    function installAppPrompt() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById('install-app-section').style.display = 'none';
+          }
+          deferredPrompt = null;
+        });
+      }
+    }
+
+    // Sistema de Notificações Motivacionais Diárias
+    const mensagensMotivacionais = [
+      "💡 Pequenos hábitos diários geram grandes conquistas financeiras! Já anotou seus gastos de hoje?",
+      "🎯 Cuidar do seu dinheiro hoje é garantir a sua liberdade amanhã. O que entrou ou saiu hoje?",
+      "📊 Não importa o valor, o importante é a constância! Registre seus lançamentos do dia.",
+      "🚀 Cada real economizado é um passo a mais rumo às suas metas. Bora atualizar a planilha?",
+      "🛡️ Sua reserva de emergência e suas finanças agradecem pela atenção de hoje!"
+    ];
+
+    function activarNotificacoes() {
+      if (!("Notification" in window)) {
+        alert("Seu navegador ou dispositivo não suporta notificações de tela.");
+        return;
+      }
+
+      Notification.requestPermission().then((perm) => {
+        if (perm === "granted") {
+          const msg = mensagensMotivacionais[Math.floor(Math.random() * mensagensMotivacionais.length)];
+          new Notification("JC Finanças Pro 💰", {
+            body: msg,
+            icon: "https://cdn-icons-png.flaticon.com/512/5501/5501375.png"
+          });
+          alert("🔔 Lembretes ativados com sucesso! Você receberá mensagens diárias para manter o foco.");
+        } else {
+          alert("A permissão de notificação foi negada no seu navegador.");
+        }
+      });
+    }
+
     // Sistema de Login Local
     function criarContaLocal() {
       const u = document.getElementById('login-user').value.trim();
