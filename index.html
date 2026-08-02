@@ -3,262 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JC Finanças</title>
-  <!-- Supabase JS SDK -->
+  <title>Login - Supabase</title>
+  <!-- Carrega o SDK do Supabase direto no navegador -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #f0f2f5; margin: 0; padding: 15px; display: flex; justify-content: center; }
-    .app-card { background: white; width: 100%; max-width: 480px; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    
-    h2, h3 { text-align: center; color: #1a1a1a; margin-top: 0; }
-    .banner-diario { background: #e8f4fd; border-left: 4px solid #007bff; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; color: #1c3d5a; }
-    
-    input, select, button { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
-    button { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    button:hover { opacity: 0.9; }
-    
-    .btn-secundario { background-color: #007bff; }
-    .btn-danger { background-color: #dc3545; }
-    .btn-app { background-color: #6f42c1; margin-bottom: 15px; }
-    
-    .resumo { display: flex; justify-content: space-between; margin: 20px 0; gap: 10px; }
-    .card-saldo { flex: 1; padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center; }
-    .card-saldo span { font-size: 12px; color: #6c757d; }
-    .card-saldo strong { display: block; font-size: 16px; margin-top: 4px; }
-    .verde { color: #28a745; }
-    .vermelho { color: #dc3545; }
-    
-    ul { list-style: none; padding: 0; margin-top: 15px; }
-    li { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-    .btn-excluir { width: auto; padding: 4px 8px; margin: 0; font-size: 12px; }
-    
-    .escondido { display: none !important; }
+    body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f9; margin: 0; }
+    .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 320px; }
+    input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; margin-top: 8px; background-color: #3ecf8e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button.secondary { background-color: #333; }
+    p.message { margin-top: 15px; font-size: 14px; text-align: center; color: #555; }
   </style>
 </head>
 <body>
 
-  <div class="app-card">
-    <!-- MENSAGEM DIÁRIA -->
-    <div class="banner-diario">
-      <strong>💡 Motivação do Dia:</strong>
-      <div id="mensagemDiaria">Carregando dica...</div>
-    </div>
-
-    <!-- BOTÃO PARA INSTALAR O APP NO CELULAR -->
-    <button id="btnInstalarApp" class="btn-app escondido">📲 Baixar / Instalar Aplicativo</button>
-
-    <!-- TELA 1: LOGIN E CADASTRO -->
-    <div id="telaAuth">
-      <h2 id="tituloAuth">Entrar no JC Finanças</h2>
-      <input type="email" id="authEmail" placeholder="Seu e-mail">
-      <input type="password" id="authSenha" placeholder="Sua senha">
-      
-      <button onclick="executarAuth()" id="btnAuthPrincipal">Entrar</button>
-      <button onclick="trocarModoAuth()" class="btn-secundario" id="btnAuthTrocar">Não tem conta? Cadastre-se</button>
-    </div>
-
-    <!-- TELA 2: PAINEL FINANCEIRO -->
-    <div id="telaPainel" class="escondido">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span id="userEmail" style="font-size: 12px; color: #666;"></span>
-        <button onclick="deslogar()" class="btn-danger" style="width: auto; padding: 5px 10px; font-size: 12px;">Sair</button>
-      </div>
-
-      <!-- RESUMO DAS FINANÇAS -->
-      <div class="resumo">
-        <div class="card-saldo">
-          <span>Entradas</span>
-          <strong class="verde" id="totalEntradas">R$ 0,00</strong>
-        </div>
-        <div class="card-saldo">
-          <span>Saídas</span>
-          <strong class="vermelho" id="totalSaidas">R$ 0,00</strong>
-        </div>
-        <div class="card-saldo">
-          <span>Saldo</span>
-          <strong id="saldoAtual">R$ 0,00</strong>
-        </div>
-      </div>
-
-      <!-- FORMULÁRIO DE NOVO LANÇAMENTO -->
-      <h3>Novo Lançamento</h3>
-      <input type="text" id="descricao" placeholder="Descrição (ex: Mercado, Salário)">
-      <input type="number" id="valor" step="0.01" placeholder="Valor (R$)">
-      <select id="tipo">
-        <option value="receita">Entrada (+)</option>
-        <option value="despesa">Saída (-)</option>
-      </select>
-      <button onclick="adicionarLancamento()">Adicionar Registro</button>
-
-      <!-- LISTA DE REGISTROS -->
-      <h3>Histórico</h3>
-      <ul id="listaLancamentos"></ul>
-    </div>
+  <div class="card">
+    <h2>Acessar Conta</h2>
+    <input type="email" id="email" placeholder="Seu e-mail" required />
+    <input type="password" id="password" placeholder="Sua senha" required />
+    
+    <button onclick="handleLogin()">Entrar</button>
+    <button class="secondary" onclick="handleSignUp()">Cadastrar</button>
+    
+    <p id="message" class="message"></p>
   </div>
 
   <script>
-    // 1. CONEXÃO COM O SUPABASE
-    const SUPABASE_URL = 'https://pgvgtdqduawecoxvxbez.supabase.co';
-    const SUPABASE_KEY = 'Sb_publishable_rer4A_EyoSj6GsnooUaB9w_od2wzjgQ'; 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // 1. INSIRA SUAS CREDENCIAIS DO SUPABASE AQUI
+    const SUPABASE_URL = 'SUA_URL_DO_SUPABASE_AQUI'
+    const SUPABASE_ANON_KEY = 'SUA_CHAVE_ANON_AQUI'
 
-    let modoCadastro = false;
-    let lancamentos = [];
+    // Initialize Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-    // 2. MENSAGEM MOTIVACIONAL DIÁRIA
-    const frases = [
-      "Pequenas economias hoje geram grandes conquistas amanhã!",
-      "Quem controla o próprio orçamento domina o seu futuro.",
-      "Anote cada centavo: a clareza traz tranquilidade financeira.",
-      "Evite compras por impulso. Espere 24h antes de fechar a compra!",
-      "Sua disciplina de hoje é a sua liberdade financeira de amanhã.",
-      "Saber para onde o dinheiro vai é o primeiro passo para fazê-lo render."
-    ];
-    document.getElementById('mensagemDiaria').innerText = frases[new Date().getDate() % frases.length];
+    const emailInput = document.getElementById('email')
+    const passwordInput = document.getElementById('password')
+    const messageEl = document.getElementById('message')
 
-    // 3. AUTENTICAÇÃO (LOGIN / CADASTRO)
-    function trocarModoAuth() {
-      modoCadastro = !modoCadastro;
-      document.getElementById('tituloAuth').innerText = modoCadastro ? 'Criar Conta' : 'Entrar no JC Finanças';
-      document.getElementById('btnAuthPrincipal').innerText = modoCadastro ? 'Cadastrar' : 'Entrar';
-      document.getElementById('btnAuthTrocar').innerText = modoCadastro ? 'Já possui conta? Faça Login' : 'Não tem conta? Cadastre-se';
-    }
-
-    async function executarAuth() {
-      const email = document.getElementById('authEmail').value;
-      const password = document.getElementById('authSenha').value;
-
-      if (!email || !password) return alert('Preencha todos os campos!');
-
-      if (modoCadastro) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) alert('Erro ao cadastrar: ' + error.message);
-        else alert('Cadastro concluído com sucesso!');
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) alert('Erro ao entrar: ' + error.message);
-        else checarSessao();
-      }
-    }
-
-    async function deslogar() {
-      await supabase.auth.signOut();
-      checarSessao();
-    }
-
-    async function checarSessao() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        document.getElementById('telaAuth').classList.add('escondido');
-        document.getElementById('telaPainel').classList.remove('escondido');
-        document.getElementById('userEmail').innerText = user.email;
-        carregarLancamentos();
-      } else {
-        document.getElementById('telaAuth').classList.remove('escondido');
-        document.getElementById('telaPainel').classList.add('escondido');
-      }
-    }
-    checarSessao();
-
-    // 4. BANCO DE DADOS (SUPABASE)
-    async function carregarLancamentos() {
-      const { data, error } = await supabase
-        .from('transacoes')
-        .select('*')
-        .order('created_at', { ascending: false });
+    // Função de Login
+    async function handleLogin() {
+      messageEl.textContent = 'Entrando...'
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailInput.value,
+        password: passwordInput.value,
+      })
 
       if (error) {
-        console.error('Erro ao buscar dados:', error);
+        messageEl.textContent = 'Erro: ' + error.message
       } else {
-        lancamentos = data || [];
-        renderizarFinancas();
+        messageEl.textContent = 'Login realizado com sucesso!'
+        console.log('Dados do usuário:', data)
       }
     }
 
-    async function adicionarLancamento() {
-      const desc = document.getElementById('descricao').value;
-      const val = parseFloat(document.getElementById('valor').value);
-      const tipo = document.getElementById('tipo').value;
-
-      if (!desc || isNaN(val) || val <= 0) return alert('Informe uma descrição e um valor válido!');
-
-      const { data: { user } } = await supabase.auth.getUser();
-
-      const { data, error } = await supabase
-        .from('transacoes')
-        .insert([{ descricao: desc, valor: val, tipo: tipo, user_id: user.id }])
-        .select();
+    // Função de Cadastro
+    async function handleSignUp() {
+      messageEl.textContent = 'Cadastrando...'
+      const { data, error } = await supabase.auth.signUp({
+        email: emailInput.value,
+        password: passwordInput.value,
+      })
 
       if (error) {
-        alert('Erro ao salvar no banco: ' + error.message);
+        messageEl.textContent = 'Erro: ' + error.message
       } else {
-        document.getElementById('descricao').value = '';
-        document.getElementById('valor').value = '';
-        carregarLancamentos();
+        messageEl.textContent = 'Cadastro feito! Confirme seu e-mail.'
+        console.log('Usuário cadastrado:', data)
       }
     }
-
-    async function removerLancamento(id) {
-      const { error } = await supabase
-        .from('transacoes')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        alert('Erro ao deletar: ' + error.message);
-      } else {
-        carregarLancamentos();
-      }
-    }
-
-    function renderizarFinancas() {
-      const lista = document.getElementById('listaLancamentos');
-      lista.innerHTML = '';
-
-      let entradas = 0;
-      let saidas = 0;
-
-      lancamentos.forEach(item => {
-        const val = parseFloat(item.valor);
-        if (item.tipo === 'receita') entradas += val;
-        else saidas += val;
-
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span>${item.descricao}</span>
-          <strong class="${item.tipo === 'receita' ? 'verde' : 'vermelho'}">
-            ${item.tipo === 'receita' ? '+' : '-'} R$ ${val.toFixed(2)}
-          </strong>
-          <button class="btn-danger btn-excluir" onclick="removerLancamento('${item.id}')">x</button>
-        `;
-        lista.appendChild(li);
-      });
-
-      const saldo = entradas - saidas;
-      document.getElementById('totalEntradas').innerText = `R$ ${entradas.toFixed(2)}`;
-      document.getElementById('totalSaidas').innerText = `R$ ${saidas.toFixed(2)}`;
-      document.getElementById('saldoAtual').innerText = `R$ ${saldo.toFixed(2)}`;
-      document.getElementById('saldoAtual').className = saldo >= 0 ? 'verde' : 'vermelho';
-    }
-
-    // 5. INSTALAÇÃO DO APP (PWA)
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('btnInstalarApp').classList.remove('escondido');
-    });
-
-    document.getElementById('btnInstalarApp').addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          document.getElementById('btnInstalarApp').classList.add('escondido');
-        }
-      }
-    });
   </script>
 </body>
 </html>
