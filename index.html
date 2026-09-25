@@ -512,6 +512,27 @@
       </div>
     </div>
 
+    <!-- MODAL PARA APAGAR CONTA FIXA -->
+    <div class="modal-overlay" id="modal-delete-fixed">
+      <div class="modal-sheet">
+        <h3 style="font-size: 1.1rem; font-weight: 800;">🗑️ Excluir Conta Fixa</h3>
+        <p style="font-size: 0.85rem; color: var(--text-gray); line-height: 1.4;">
+          Como deseja excluir esta conta fixa?
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+          <button class="btn-action" style="background: var(--red-bg); color: var(--red-accent); border: 1px solid var(--red-accent);" onclick="confirmDeleteFixed('future')">
+            📅 Apenas deste mês para frente
+          </button>
+          <button class="btn-action btn-cancel" style="color: var(--red-accent);" onclick="confirmDeleteFixed('all')">
+            🗑️ Apagar de TODOS os meses (inclusive passado)
+          </button>
+          <button class="btn-action btn-cancel" onclick="closeDeleteFixedModal()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-overlay" id="modal-variable-budget">
       <div class="modal-sheet">
         <h3 style="font-size: 1.1rem; font-weight: 800;" id="variable-budget-modal-title">💸 Nova Variável</h3>
@@ -762,6 +783,7 @@
 
     let currentType = 'saida'; 
     let editingId = null;
+    let pendingDeleteFixedId = null; // Guarda o ID da conta fixa em processo de exclusão
     let currentFilter = 'all';
     let currentView = 'lancamentos';
     let onboardingStep = 0;
@@ -1638,12 +1660,66 @@
       }
     }
 
+    // LÓGICA DE EXCLUSÃO DE TRANSAÇÃO (INCLUINDO OPÇÃO DE EXCLUIR FIXAS FUTURAS)
     function deleteTransaction(id) {
-      if (confirm('Deseja realmente apagar este lançamento?')) {
-        state.transactions = state.transactions.filter(t => t.id !== id);
+      const item = state.transactions.find(t => t.id === id);
+      if (!item) return;
+
+      if (item.isFixed) {
+        pendingDeleteFixedId = id;
+        document.getElementById('modal-delete-fixed').style.display = 'flex';
+      } else {
+        if (confirm('Deseja realmente apagar este lançamento?')) {
+          state.transactions = state.transactions.filter(t => t.id !== id);
+          saveData();
+          render();
+        }
+      }
+    }
+
+    function closeDeleteFixedModal() {
+      document.getElementById('modal-delete-fixed').style.display = 'none';
+      pendingDeleteFixedId = null;
+    }
+
+    function confirmDeleteFixed(type) {
+      if (!pendingDeleteFixedId) return;
+      const targetItem = state.transactions.find(t => t.id === pendingDeleteFixedId);
+
+      if (targetItem) {
+        if (type === 'all') {
+          // Apaga por grupo fixo (se houver) ou por nome e tipo em todos os meses
+          if (targetItem.fixedGroupId) {
+            state.transactions = state.transactions.filter(t => t.fixedGroupId !== targetItem.fixedGroupId);
+          } else {
+            state.transactions = state.transactions.filter(t => !(t.isFixed && t.desc === targetItem.desc && t.tipo === targetItem.tipo));
+          }
+        } else if (type === 'future') {
+          // Apaga deste mês em diante
+          const currentIdx = state.currentMonthIdx;
+          if (targetItem.fixedGroupId) {
+            state.transactions = state.transactions.filter(t => {
+              if (t.fixedGroupId === targetItem.fixedGroupId) {
+                const itemMonthIdx = state.monthsList.indexOf(t.month);
+                return itemMonthIdx < currentIdx; // Mantém apenas os meses anteriores ao atual
+              }
+              return true;
+            });
+          } else {
+            state.transactions = state.transactions.filter(t => {
+              if (t.isFixed && t.desc === targetItem.desc && t.tipo === targetItem.tipo) {
+                const itemMonthIdx = state.monthsList.indexOf(t.month);
+                return itemMonthIdx < currentIdx;
+              }
+              return true;
+            });
+          }
+        }
         saveData();
         render();
       }
+
+      closeDeleteFixedModal();
     }
 
     function editTransaction(id) {
