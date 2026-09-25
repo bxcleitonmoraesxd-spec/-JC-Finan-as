@@ -895,7 +895,7 @@
     if (state.theme) document.body.setAttribute('data-theme', state.theme);
 
     function formatCurrency(val) {
-      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
     }
 
     function switchView(viewName) {
@@ -1182,7 +1182,7 @@
     }
 
     // ==========================================
-    // GASTOS VARIÁVEIS COM ACÚMULO DIÁRIO
+    // GASTOS VARIÁVEIS COM ACÚMULO DIÁRIO (CORRIGIDO)
     // ==========================================
     const variablePresetDefaults = {
       'Comida': { icon: '🍔', period: 'daily', limit: 40 },
@@ -1257,43 +1257,53 @@
 
     function getVariableDailyAvailable(budget, date = new Date()) {
       const limit = Number(budget.limit || 0);
-      const d = new Date(date);
-      d.setHours(0,0,0,0);
+      const todayISO = getTodayISO();
 
-      let accumulated = limit;
-      let cursor = new Date(d);
+      // Mapeia todos os gastos efetuados nesta variável específica
+      const spendsMap = {};
+      (state.variableSpends || [])
+        .filter(s => s.budgetId === budget.id)
+        .forEach(s => {
+          spendsMap[s.date] = (spendsMap[s.date] || 0) + Number(s.amount || 0);
+        });
 
-      for (let i = 0; i < 3650; i++) {
-        const key = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}-${String(cursor.getDate()).padStart(2,'0')}`;
-        const spent = (state.variableSpends || [])
-          .filter(s => s.budgetId === budget.id && s.date === key)
-          .reduce((sum, s) => sum + Number(s.amount || 0), 0);
-
-        if (key !== `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`) {
-          if (spent >= limit) {
-            break;
-          }
-          accumulated += Math.max(0, limit - spent);
-        }
-
-        cursor.setDate(cursor.getDate() - 1);
+      // Calcula o acumulado apenas desde o primeiro gasto registrado ou data da criação
+      let startDateStr = budget.createdAt ? new Date(budget.createdAt).toISOString().slice(0, 10) : todayISO;
+      const allSpendDates = Object.keys(spendsMap).sort();
+      if (allSpendDates.length > 0 && allSpendDates[0] < startDateStr) {
+        startDateStr = allSpendDates[0];
       }
 
-      return accumulated;
+      const cursor = parseISODateSafe(startDateStr);
+      const todayObj = parseISODateSafe(todayISO);
+      
+      let accumulated = limit;
+
+      while (cursor < todayObj) {
+        const key = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}-${String(cursor.getDate()).padStart(2,'0')}`;
+        const spentOnDay = spendsMap[key] || 0;
+        
+        // Adiciona a sobra do dia anterior ao saldo acumulado
+        const leftover = limit - spentOnDay;
+        accumulated += leftover;
+
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      return Math.max(limit, accumulated);
     }
 
     function getVariableDailyState(budget, date = new Date()) {
-      const d = new Date(date);
-      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      const available = getVariableDailyAvailable(budget, d);
+      const todayISO = getTodayISO();
+      const available = getVariableDailyAvailable(budget, date);
       const spentToday = (state.variableSpends || [])
-        .filter(s => s.budgetId === budget.id && s.date === key)
+        .filter(s => s.budgetId === budget.id && s.date === todayISO)
         .reduce((sum, s) => sum + Number(s.amount || 0), 0);
 
       return {
         available,
         spentToday,
-        remaining: Math.max(0, available - spentToday)
+        remaining: available - spentToday
       };
     }
 
