@@ -895,7 +895,7 @@
     if (state.theme) document.body.setAttribute('data-theme', state.theme);
 
     function formatCurrency(val) {
-      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
     }
 
     function switchView(viewName) {
@@ -1251,59 +1251,49 @@
 
     function getVariableSpent(budgetId, startDate, endDate) {
       return (state.variableSpends || [])
-        .filter(s => s.budgetId === budgetId && s.date >= startDate && s.date <= endDate)
+        .filter(s => String(s.budgetId) === String(budgetId) && s.date >= startDate && s.date <= endDate)
         .reduce((sum, s) => sum + Number(s.amount || 0), 0);
     }
 
     function getVariableDailyAvailable(budget, date = new Date()) {
       const limit = Number(budget.limit || 0);
-      const todayISO = getTodayISO();
+      const d = new Date(date);
+      d.setHours(0,0,0,0);
 
-      // Mapeia todos os gastos efetuados nesta variável específica
-      const spendsMap = {};
-      (state.variableSpends || [])
-        .filter(s => s.budgetId === budget.id)
-        .forEach(s => {
-          spendsMap[s.date] = (spendsMap[s.date] || 0) + Number(s.amount || 0);
-        });
-
-      // Calcula o acumulado apenas desde o primeiro gasto registrado ou data da criação
-      let startDateStr = budget.createdAt ? new Date(budget.createdAt).toISOString().slice(0, 10) : todayISO;
-      const allSpendDates = Object.keys(spendsMap).sort();
-      if (allSpendDates.length > 0 && allSpendDates[0] < startDateStr) {
-        startDateStr = allSpendDates[0];
-      }
-
-      const cursor = parseISODateSafe(startDateStr);
-      const todayObj = parseISODateSafe(todayISO);
-      
       let accumulated = limit;
+      let cursor = new Date(d);
 
-      while (cursor < todayObj) {
+      for (let i = 0; i < 3650; i++) {
         const key = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}-${String(cursor.getDate()).padStart(2,'0')}`;
-        const spentOnDay = spendsMap[key] || 0;
-        
-        // Adiciona a sobra do dia anterior ao saldo acumulado
-        const leftover = limit - spentOnDay;
-        accumulated += leftover;
+        const spent = (state.variableSpends || [])
+          .filter(s => String(s.budgetId) === String(budget.id) && s.date === key)
+          .reduce((sum, s) => sum + Number(s.amount || 0), 0);
 
-        cursor.setDate(cursor.getDate() + 1);
+        if (key !== `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`) {
+          if (spent >= limit) {
+            break;
+          }
+          accumulated += Math.max(0, limit - spent);
+        }
+
+        cursor.setDate(cursor.getDate() - 1);
       }
 
-      return Math.max(limit, accumulated);
+      return accumulated;
     }
 
     function getVariableDailyState(budget, date = new Date()) {
-      const todayISO = getTodayISO();
-      const available = getVariableDailyAvailable(budget, date);
+      const d = new Date(date);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const available = getVariableDailyAvailable(budget, d);
       const spentToday = (state.variableSpends || [])
-        .filter(s => s.budgetId === budget.id && s.date === todayISO)
+        .filter(s => String(s.budgetId) === String(budget.id) && s.date === key)
         .reduce((sum, s) => sum + Number(s.amount || 0), 0);
 
       return {
         available,
         spentToday,
-        remaining: available - spentToday
+        remaining: Math.max(0, available - spentToday)
       };
     }
 
@@ -1425,7 +1415,7 @@
       if (!state.variableBudgets) state.variableBudgets = [];
 
       if (editingVariableBudgetId) {
-        const budget = state.variableBudgets.find(b => b.id === editingVariableBudgetId);
+        const budget = state.variableBudgets.find(b => String(b.id) === String(editingVariableBudgetId));
         if (budget) {
           budget.icon = icon;
           budget.name = name;
@@ -1449,10 +1439,10 @@
     }
 
     function editVariableBudget(id) {
-      const budget = state.variableBudgets.find(b => b.id === id);
+      const budget = state.variableBudgets.find(b => String(b.id) === String(id));
       if (!budget) return;
 
-      editingVariableBudgetId = id;
+      editingVariableBudgetId = budget.id;
       document.getElementById('variable-budget-modal-title').innerText = '✏️ Editar Variável';
       document.getElementById('variable-input-icon').value = budget.icon || '💸';
       document.getElementById('variable-input-name').value = budget.name || '';
@@ -1464,23 +1454,23 @@
     }
 
     function deleteVariableBudget(id) {
-      const budget = state.variableBudgets.find(b => b.id === id);
+      const budget = state.variableBudgets.find(b => String(b.id) === String(id));
       if (!budget) return;
 
       if (!confirm(`Excluir o limite "${budget.name}"? Os registros de gastos dessa variável também serão apagados.`)) return;
 
-      state.variableBudgets = state.variableBudgets.filter(b => b.id !== id);
-      state.variableSpends = (state.variableSpends || []).filter(s => s.budgetId !== id);
+      state.variableBudgets = state.variableBudgets.filter(b => String(b.id) !== String(id));
+      state.variableSpends = (state.variableSpends || []).filter(s => String(s.budgetId) !== String(id));
 
       saveData();
       render();
     }
 
     function openVariableSpendModal(budgetId) {
-      const budget = state.variableBudgets.find(b => b.id === budgetId);
+      const budget = state.variableBudgets.find(b => String(b.id) === String(budgetId));
       if (!budget) return;
 
-      activeVariableBudgetId = budgetId;
+      activeVariableBudgetId = budget.id;
       document.getElementById('variable-spend-modal-title').innerText = `${budget.icon || '💸'} Registrar gasto — ${budget.name}`;
       document.getElementById('variable-spend-modal-info').innerText =
         `${getPeriodLabel(budget.period)} • Limite ${formatCurrency(Number(budget.limit || 0))}`;
@@ -1497,7 +1487,7 @@
     }
 
     function saveVariableSpend() {
-      const budget = state.variableBudgets.find(b => b.id === activeVariableBudgetId);
+      const budget = state.variableBudgets.find(b => String(b.id) === String(activeVariableBudgetId));
       if (!budget) return alert('Variável não encontrada!');
 
       const amount = parseFloat(document.getElementById('variable-spend-value').value);
@@ -1578,7 +1568,7 @@
       render();
     }
     function deleteCard(id) {
-      state.creditCards = state.creditCards.filter(c => c.id !== id);
+      state.creditCards = state.creditCards.filter(c => String(c.id) !== String(id));
       saveData();
       render();
     }
@@ -1637,7 +1627,7 @@
     }
 
     function toggleStatus(id) {
-      const item = state.transactions.find(t => t.id === id);
+      const item = state.transactions.find(t => String(t.id) === String(id));
       if (item) { 
         item.pago = !item.pago; 
         if (item.pago) {
@@ -1650,17 +1640,17 @@
 
     function deleteTransaction(id) {
       if (confirm('Deseja realmente apagar este lançamento?')) {
-        state.transactions = state.transactions.filter(t => t.id !== id);
+        state.transactions = state.transactions.filter(t => String(t.id) !== String(id));
         saveData();
         render();
       }
     }
 
     function editTransaction(id) {
-      const item = state.transactions.find(t => t.id === id);
+      const item = state.transactions.find(t => String(t.id) === String(id));
       if (!item) return;
 
-      editingId = id;
+      editingId = item.id;
       document.getElementById('modal-title').innerText = 'Editar Lançamento';
       document.getElementById('input-day').value = item.day;
       document.getElementById('input-desc').value = item.desc;
@@ -1704,7 +1694,7 @@
       if (!state.transactions) state.transactions = [];
 
       if (editingId) {
-        const itemOriginal = state.transactions.find(t => t.id === editingId);
+        const itemOriginal = state.transactions.find(t => String(t.id) === String(editingId));
         if (itemOriginal) {
           itemOriginal.day = day;
           itemOriginal.desc = desc;
