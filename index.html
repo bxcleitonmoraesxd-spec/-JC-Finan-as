@@ -721,40 +721,117 @@
     }
 
     // A FUNÇÃO FOI TOTALMENTE RESTAURADA AQUI! 👇
+    // Calcula quanto do limite diário foi "comido" por excessos de dias anteriores.
+    // Ex.: limite R$50, gasto R$70 hoje => amanhã começa com R$30 disponíveis.
+    // Se amanhã gastar R$40, o próximo dia começa com R$40 disponíveis.
+    function getLocalDateKey(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function calculateDailyCarry(budgetId, limit, targetDate) {
+      const spends = (state.variableSpends || [])
+        .filter(s => s.budgetId === budgetId && s.date <= targetDate)
+        .reduce((map, s) => {
+          map[s.date] = (map[s.date] || 0) + Number(s.value || 0);
+          return map;
+        }, {});
+
+      // Começa no primeiro dia com gasto registrado. Assim, não criamos
+      // "dívida" artificial antes do usuário começar a usar o controle.
+      const dates = Object.keys(spends).sort();
+      if (!dates.length) {
+        return { carry: 0, available: limit, targetSpent: 0, targetExcess: 0 };
+      }
+
+      const firstDate = dates[0];
+      const start = new Date(`${firstDate}T12:00:00`);
+      const end = new Date(`${targetDate}T12:00:00`);
+      let carry = 0;
+      let targetSpent = 0;
+
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const key = getLocalDateKey(d);
+        const spent = Number(spends[key] || 0);
+        const available = Math.max(0, limit - carry);
+        const excess = Math.max(0, spent - available);
+
+        if (key === targetDate) targetSpent = spent;
+        carry = excess;
+      }
+
+      // "carry" aqui é o excesso gerado pelo próprio targetDate.
+      // Para mostrar o disponível de hoje, precisamos calcular somente
+      // o excesso acumulado ANTES de hoje.
+      let previousCarry = 0;
+      for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+        const key = getLocalDateKey(d);
+        const spent = Number(spends[key] || 0);
+        const available = Math.max(0, limit - previousCarry);
+        previousCarry = Math.max(0, spent - available);
+      }
+
+      const availableToday = Math.max(0, limit - previousCarry);
+      const todayExcess = Math.max(0, targetSpent - availableToday);
+
+      return {
+        carry: previousCarry,
+        available: availableToday,
+        targetSpent,
+        targetExcess: todayExcess
+      };
+    }
+
     function renderVariables() {
       const l = document.getElementById('variable-budget-list'); if(!l) return;
       const bs = (state.variableBudgets||[]).filter(b=>b.period===variableViewPeriod);
       if(!bs.length) { l.innerHTML=`<div style="text-align:center; color:var(--text-gray); font-size:0.8rem; padding:10px;">Sem variáveis criadas para este período.</div>`; return; }
-      
+
       l.innerHTML = bs.map(b=>{
         let spent = 0;
         let limit = Number(b.limit);
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
-        
+        const todayStr = getLocalDateKey(now);
+
         let relevantSpends = (state.variableSpends || []).filter(s => s.budgetId === b.id);
-        
-        // Filtra os gastos baseado no período selecionado
+
+        // Para o diário, o excesso de dias anteriores reduz o limite disponível hoje.
+        let effectiveLimit = limit;
+        let carriedDebt = 0;
+
         if (b.period === 'daily') {
-          relevantSpends = relevantSpends.filter(s => s.date === todayStr);
+          const daily = calculateDailyCarry(b.id, limit, todayStr);
+          spent = daily.targetSpent;
+          effectiveLimit = daily.available;
+          carriedDebt = daily.carry;
         } else if (b.period === 'weekly') {
           const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
-          relevantSpends = relevantSpends.filter(s => new Date(s.date) >= weekAgo);
+          relevantSpends = relevantSpends.filter(s => new Date(`${s.date}T12:00:00`) >= weekAgo);
+          relevantSpends.forEach(s => spent += Number(s.value || 0));
         } else if (b.period === 'monthly') {
           const currentMonthPrefix = todayStr.substring(0, 7);
           relevantSpends = relevantSpends.filter(s => s.date.startsWith(currentMonthPrefix));
+          relevantSpends.forEach(s => spent += Number(s.value || 0));
         }
-        
-        relevantSpends.forEach(s => spent += Number(s.value));
-        
-        const pct = Math.min((spent/limit)*100, 100);
+
+        const pctBase = b.period === 'daily' ? effectiveLimit : limit;
+        const pct = pctBase > 0 ? Math.min((spent/pctBase)*100, 100) : (spent > 0 ? 100 : 0);
         let colorClass = '';
         if (pct >= 90) colorClass = 'danger';
         else if (pct >= 75) colorClass = 'warning';
-        
-        const remaining = limit - spent;
+
+        const remaining = (b.period === 'daily' ? effectiveLimit : limit) - spent;
         const periodText = b.period === 'daily' ? 'Diário' : b.period === 'weekly' ? 'Semanal' : 'Mensal';
-        
+
+        let carryInfo = '';
+        if (b.period === 'daily' && carriedDebt > 0) {
+          carryInfo = `<div style="font-size:0.7rem; color:var(--red-accent); margin-top:4px; font-weight:800;">
+            ⚠️ ${formatCurrency(carriedDebt)} de excesso veio dos dias anteriores
+          </div>`;
+        }
+
         return `
           <div class="variable-budget-card">
             <div class="variable-budget-top">
@@ -763,11 +840,12 @@
                 <div>
                   <div class="variable-budget-name-text">${b.name}</div>
                   <div class="variable-budget-period">${periodText}</div>
+                  ${carryInfo}
                 </div>
               </div>
               <div class="variable-budget-values">
                 <div class="variable-budget-spent">${formatCurrency(spent)}</div>
-                <div class="variable-budget-limit">de ${formatCurrency(limit)}</div>
+                <div class="variable-budget-limit">de ${formatCurrency(b.period === 'daily' ? effectiveLimit : limit)}</div>
               </div>
             </div>
             <div class="variable-budget-bar">
