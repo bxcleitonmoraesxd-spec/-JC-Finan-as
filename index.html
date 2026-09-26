@@ -169,6 +169,12 @@
     .variable-budget-remaining { font-size: 0.75rem; font-weight: 800; }
     .variable-budget-actions { display: flex; gap: 6px; }
 
+    .variable-budget-status { margin-top: 8px; padding: 9px 10px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; line-height: 1.4; background: var(--card-bg); color: var(--text-gray); }
+    .variable-budget-status.good { background: var(--green-bg); color: var(--green-accent); }
+    .variable-budget-status.warning { background: rgba(245, 158, 11, 0.15); color: var(--yellow-accent); }
+    .variable-budget-status.danger { background: var(--red-bg); color: var(--red-accent); }
+    .variable-budget-mini { display:flex; justify-content:space-between; gap:8px; margin-top:6px; font-size:0.68rem; color:var(--text-gray); }
+
     .filter-box { display: flex; gap: 10px; flex-direction: column; margin-bottom: 12px; flex-shrink: 0; }
     .search-input { width: 100%; padding: 12px 16px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; color: var(--text-main); font-size: 0.9rem; outline: none; transition: border-color 0.3s; }
     .search-input:focus { border-color: var(--primary-orange); }
@@ -319,7 +325,7 @@
           <div class="variable-budget-header">
             <div>
               <div class="variable-budget-title">💸 Gastos Variáveis</div>
-              <div class="variable-budget-subtitle">Controle limites em tempo real.</div>
+              <div class="variable-budget-subtitle">Controle limites em tempo real. No diário, o excesso é descontado automaticamente do dia seguinte.</div>
             </div>
             <button class="btn-emergency-action" style="background: var(--primary-orange);" onclick="openVariableBudgetModal()">+ Nova</button>
           </div>
@@ -787,50 +793,76 @@
     function renderVariables() {
       const l = document.getElementById('variable-budget-list'); if(!l) return;
       const bs = (state.variableBudgets||[]).filter(b=>b.period===variableViewPeriod);
-      if(!bs.length) { l.innerHTML=`<div style="text-align:center; color:var(--text-gray); font-size:0.8rem; padding:10px;">Sem variáveis criadas para este período.</div>`; return; }
+      if(!bs.length) {
+        l.innerHTML=`<div style="text-align:center; color:var(--text-gray); font-size:0.8rem; padding:10px;">Sem variáveis criadas para este período.</div>`;
+        return;
+      }
 
-      l.innerHTML = bs.map(b=>{
+      const now = new Date();
+      const todayStr = getLocalDateKey(now);
+
+      l.innerHTML = bs.map(b => {
+        const baseLimit = Math.max(0, Number(b.limit) || 0);
         let spent = 0;
-        let limit = Number(b.limit);
-        const now = new Date();
-        const todayStr = getLocalDateKey(now);
-
-        let relevantSpends = (state.variableSpends || []).filter(s => s.budgetId === b.id);
-
-        // Para o diário, o excesso de dias anteriores reduz o limite disponível hoje.
-        let effectiveLimit = limit;
+        let effectiveLimit = baseLimit;
         let carriedDebt = 0;
+        let statusText = '';
+        let statusClass = 'good';
+
+        const relevantSpends = (state.variableSpends || [])
+          .filter(s => s.budgetId === b.id);
 
         if (b.period === 'daily') {
-          const daily = calculateDailyCarry(b.id, limit, todayStr);
+          const daily = calculateDailyCarry(b.id, baseLimit, todayStr);
           spent = daily.targetSpent;
           effectiveLimit = daily.available;
           carriedDebt = daily.carry;
+
+          if (carriedDebt > 0) {
+            statusText = `⚠️ R$ ${formatCurrency(carriedDebt).replace('R$','').trim()} de excesso veio dos dias anteriores.`;
+          }
+
+          if (spent > effectiveLimit) {
+            const excess = spent - effectiveLimit;
+            statusText = `🔴 Você passou R$ ${formatCurrency(excess).replace('R$','').trim()} do limite de hoje. Esse valor será levado para amanhã.`;
+            statusClass = 'danger';
+          } else {
+            const remaining = effectiveLimit - spent;
+            statusText = `🟢 Restam ${formatCurrency(remaining)} para hoje.`;
+            statusClass = carriedDebt > 0 ? 'warning' : 'good';
+          }
         } else if (b.period === 'weekly') {
-          const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
-          relevantSpends = relevantSpends.filter(s => new Date(`${s.date}T12:00:00`) >= weekAgo);
-          relevantSpends.forEach(s => spent += Number(s.value || 0));
-        } else if (b.period === 'monthly') {
-          const currentMonthPrefix = todayStr.substring(0, 7);
-          relevantSpends = relevantSpends.filter(s => s.date.startsWith(currentMonthPrefix));
-          relevantSpends.forEach(s => spent += Number(s.value || 0));
+          const weekAgo = new Date(now);
+          weekAgo.setDate(now.getDate() - 6);
+          const startKey = getLocalDateKey(weekAgo);
+          relevantSpends
+            .filter(s => s.date >= startKey && s.date <= todayStr)
+            .forEach(s => spent += Number(s.value || 0));
+
+          effectiveLimit = baseLimit;
+          const remaining = Math.max(0, effectiveLimit - spent);
+          statusText = spent > effectiveLimit
+            ? `🔴 Excedeu ${formatCurrency(spent - effectiveLimit)} nesta semana.`
+            : `🟢 Restam ${formatCurrency(remaining)} nesta semana.`;
+          statusClass = spent > effectiveLimit ? 'danger' : 'good';
+        } else {
+          const monthKey = todayStr.slice(0,7);
+          relevantSpends
+            .filter(s => String(s.date || '').slice(0,7) === monthKey)
+            .forEach(s => spent += Number(s.value || 0));
+
+          effectiveLimit = baseLimit;
+          const remaining = Math.max(0, effectiveLimit - spent);
+          statusText = spent > effectiveLimit
+            ? `🔴 Excedeu ${formatCurrency(spent - effectiveLimit)} neste mês.`
+            : `🟢 Restam ${formatCurrency(remaining)} neste mês.`;
+          statusClass = spent > effectiveLimit ? 'danger' : 'good';
         }
 
-        const pctBase = b.period === 'daily' ? effectiveLimit : limit;
-        const pct = pctBase > 0 ? Math.min((spent/pctBase)*100, 100) : (spent > 0 ? 100 : 0);
-        let colorClass = '';
-        if (pct >= 90) colorClass = 'danger';
-        else if (pct >= 75) colorClass = 'warning';
-
-        const remaining = (b.period === 'daily' ? effectiveLimit : limit) - spent;
-        const periodText = b.period === 'daily' ? 'Diário' : b.period === 'weekly' ? 'Semanal' : 'Mensal';
-
-        let carryInfo = '';
-        if (b.period === 'daily' && carriedDebt > 0) {
-          carryInfo = `<div style="font-size:0.7rem; color:var(--red-accent); margin-top:4px; font-weight:800;">
-            ⚠️ ${formatCurrency(carriedDebt)} de excesso veio dos dias anteriores
-          </div>`;
-        }
+        const pct = effectiveLimit > 0 ? Math.min((spent / effectiveLimit) * 100, 100) : (spent > 0 ? 100 : 0);
+        const remaining = Math.max(0, effectiveLimit - spent);
+        const isOver = spent > effectiveLimit;
+        const fillClass = isOver ? 'danger' : (pct >= 80 ? 'warning' : '');
 
         return `
           <div class="variable-budget-card">
@@ -839,79 +871,34 @@
                 <div class="variable-budget-icon">${b.icon||'💸'}</div>
                 <div>
                   <div class="variable-budget-name-text">${b.name}</div>
-                  <div class="variable-budget-period">${periodText}</div>
-                  ${carryInfo}
+                  <div class="variable-budget-period">${b.period==='daily'?'Limite por dia':b.period==='weekly'?'Limite por semana':'Limite por mês'}</div>
                 </div>
               </div>
               <div class="variable-budget-values">
                 <div class="variable-budget-spent">${formatCurrency(spent)}</div>
-                <div class="variable-budget-limit">de ${formatCurrency(b.period === 'daily' ? effectiveLimit : limit)}</div>
+                <div class="variable-budget-limit">de ${formatCurrency(effectiveLimit)}</div>
               </div>
             </div>
+
             <div class="variable-budget-bar">
-              <div class="variable-budget-fill ${colorClass}" style="width: ${pct}%"></div>
+              <div class="variable-budget-fill ${fillClass}" style="width:${pct}%"></div>
             </div>
+
             <div class="variable-budget-bottom">
-              <div class="variable-budget-remaining" style="color: var(--${remaining < 0 ? 'red' : 'green'}-accent)">
-                ${remaining < 0 ? 'Passou ' : 'Resta '}${formatCurrency(Math.abs(remaining))}
+              <div class="variable-budget-remaining">
+                ${isOver ? `Excesso: ${formatCurrency(spent-effectiveLimit)}` : `Disponível: ${formatCurrency(remaining)}`}
               </div>
               <div class="variable-budget-actions">
-                <button class="btn-icon" style="width: 32px; height: 32px;" onclick="deleteVariableBudget(${b.id})">🗑️</button>
-                <button class="btn-emergency-action" style="padding: 6px 12px; background: var(--primary-orange);" onclick="openVariableSpendModal(${b.id}, '${b.name}')">+ Gasto</button>
+                <button class="btn-icon" onclick="openVariableSpendModal(${b.id})">＋</button>
+                <button class="btn-icon" onclick="deleteVariableBudget(${b.id})">🗑️</button>
               </div>
             </div>
+
+            <div class="variable-budget-status ${statusClass}">${statusText}</div>
+            ${b.period==='daily' ? `<div class="variable-budget-mini"><span>Limite normal: ${formatCurrency(baseLimit)}</span><span>Hoje: ${todayStr.split('-').reverse().join('/')}</span></div>` : ''}
           </div>
         `;
       }).join('');
-    }
-
-    function deleteVariableBudget(id) {
-        if(confirm('Apagar este controle e todos os seus gastos registrados nele?')) {
-            state.variableBudgets = state.variableBudgets.filter(b => b.id !== id);
-            state.variableSpends = (state.variableSpends || []).filter(s => s.budgetId !== id);
-            saveData(); renderVariables();
-        }
-    }
-
-    function openVariableSpendModal(id, name) {
-        activeVariableBudgetId = id;
-        document.getElementById('variable-spend-modal-info').innerText = `Lançando em: ${name}`;
-        document.getElementById('variable-spend-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('modal-variable-spend').style.display = 'flex';
-    }
-    
-    function closeVariableSpendModal() {
-        document.getElementById('modal-variable-spend').style.display = 'none';
-        activeVariableBudgetId = null;
-    }
-
-    function saveVariableSpend() {
-        const val = Number(document.getElementById('variable-spend-value').value);
-        const date = document.getElementById('variable-spend-date').value;
-        const note = document.getElementById('variable-spend-note').value;
-        const createTx = document.getElementById('variable-create-transaction').checked;
-        
-        if(!val || !date) return alert('Preencha o valor e a data!');
-        
-        if(!state.variableSpends) state.variableSpends = [];
-        state.variableSpends.push({ id: Date.now(), budgetId: activeVariableBudgetId, value: val, date: date, note: note });
-        
-        if(createTx) {
-            const b = state.variableBudgets.find(x => x.id === activeVariableBudgetId);
-            const mk = state.monthsList[state.currentMonthIdx];
-            const d = parseInt(date.split('-')[2]);
-            state.transactions.push({
-                id: Date.now() + 1, month: mk, day: d, 
-                desc: (b ? b.name : 'Gasto Variável') + (note ? ` - ${note}` : ''),
-                val: val, cat: '🛒|Mercado', tipo: 'saida', tag: '', pago: true
-            });
-        }
-        
-        saveData();
-        closeVariableSpendModal();
-        document.getElementById('variable-spend-value').value = '';
-        document.getElementById('variable-spend-note').value = '';
-        render();
     }
 
     function setVariableViewPeriod(p) { variableViewPeriod = p; document.querySelectorAll('.variable-period-btn').forEach(b=>b.classList.remove('active')); document.getElementById(`var-period-${p}`).classList.add('active'); renderVariables(); }
