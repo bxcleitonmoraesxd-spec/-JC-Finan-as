@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JC Finanças Pro: Revolução</title>
+  <title>JC Finanças Pro V3</title>
   
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,7 +18,6 @@
 
   <style>
     :root {
-      /* Cores Revolucionárias */
       --primary-orange: #FF3D00;
       --primary-glow: rgba(255, 61, 0, 0.6);
       --bg-main: #09090B;
@@ -59,7 +58,6 @@
       transition: background-color 0.3s ease;
     }
 
-    /* Tela de Autenticação */
     .auth-screen {
       position: absolute;
       inset: 0;
@@ -261,7 +259,7 @@
     <div class="app-header">
       <div class="month-selector">
         <button class="month-btn" id="prev-month">‹</button>
-        <span class="current-month" id="month-display">jun/26</span>
+        <span class="current-month" id="month-display">set/26</span>
         <button class="month-btn" id="next-month">›</button>
       </div>
       <div class="header-actions">
@@ -337,20 +335,20 @@
           </div>
 
           <div class="variable-quick-row">
-            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🍔','Comida')">🍔 Comida</button>
-            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🚗','Uber')">🚗 Uber</button>
-            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🛒','Mercado')">🛒 Mercado</button>
-            <button class="variable-quick-btn" onclick="openVariableBudgetModal('☕','Café')">☕ Café</button>
-            <button class="variable-quick-btn" onclick="openVariableBudgetModal('⛽','Combustível')">⛽ Combust</button>
-            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🍕','Delivery')">🍕 Delivery</button>
-            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🎮','Lazer')">🎮 Lazer</button>
+            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🍔','Comida','🛒|Mercado')">🍔 Comida</button>
+            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🚗','Uber','🚗|Transporte')">🚗 Uber</button>
+            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🛒','Mercado','🛒|Mercado')">🛒 Mercado</button>
+            <button class="variable-quick-btn" onclick="openVariableBudgetModal('☕','Café','🛒|Mercado')">☕ Café</button>
+            <button class="variable-quick-btn" onclick="openVariableBudgetModal('⛽','Combustível','🚗|Transporte')">⛽ Combust</button>
+            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🍕','Delivery','🛒|Mercado')">🍕 Delivery</button>
+            <button class="variable-quick-btn" onclick="openVariableBudgetModal('🎮','Lazer','🎮|Lazer')">🎮 Lazer</button>
           </div>
 
           <div id="variable-budget-list" class="variable-budget-list"></div>
         </div>
 
         <div class="filter-box">
-          <input type="text" id="search-input" class="search-input" placeholder="🔍 Pesquisar conta ou tag..." oninput="render()">
+          <input type="text" id="search-input" class="search-input" placeholder="🔍 Pesquisar conta, tag ou dia..." oninput="render()">
           <div class="filter-tabs">
             <button class="filter-btn active" id="f-all" onclick="setFilter('all')">Todos</button>
             <button class="filter-btn" id="f-pending" onclick="setFilter('pending')">Pendentes</button>
@@ -365,7 +363,7 @@
     <div class="view-panel" id="view-calendario">
       <div class="content-area">
         <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-gray); margin-bottom: 16px;">
-          📅 Saldos Diários (Toque no dia para checar)
+          📅 Saldos Diários (Toque no dia para filtrar)
         </div>
         <div class="calendar-matrix" id="calendar-matrix-grid"></div>
 
@@ -405,10 +403,10 @@
 
         <div class="config-section">
           <div class="config-title">🔔 Lembretes & Motivação</div>
-          <p style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 14px; line-height: 1.4;">Ative o lembrete diário para não esquecer de registrar seus gastos!</p>
+          <p style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 14px; line-height: 1.4;">Ative as notificações para receber seu lembrete diário de lançamentos.</p>
           <div style="display: flex; gap: 10px; flex-direction: column;">
             <button class="btn-action btn-save" onclick="ativarNotificacaoDiaria()">🔔 Ativar Notificações</button>
-            <button class="btn-action btn-cancel" onclick="testarNotificacao()">🧪 Testar Hoje</button>
+            <button class="btn-action btn-cancel" onclick="testarNotificacao()">🧪 Testar Notificação</button>
           </div>
         </div>
 
@@ -456,7 +454,7 @@
 
         <div class="checkbox-container">
           <input type="checkbox" id="check-fixed" style="width: 20px; height: 20px;">
-          <label for="check-fixed">Conta Fixa? (Repetir nos meses)</label>
+          <label for="check-fixed">Conta Fixa? (Repetir nos meses seguintes)</label>
         </div>
 
         <div id="credit-options">
@@ -466,6 +464,9 @@
           </div>
           <div id="installments-box" style="display: none; margin-top: 8px;">
             <input type="number" id="input-installments" class="input-field" placeholder="Nº de Parcelas" min="1" value="1">
+            <select id="select-card" class="select-field" style="margin-top: 8px;">
+              <option value="">Selecionar Cartão (Opcional)</option>
+            </select>
           </div>
         </div>
 
@@ -476,12 +477,18 @@
       </div>
     </div>
 
-    <!-- Modais das Variáveis Restaurados -->
+    <!-- Modal Gastos Variáveis -->
     <div class="modal-overlay" id="modal-variable-budget">
       <div class="modal-sheet">
         <h3 style="font-size: 1.2rem; font-weight: 800;" id="variable-budget-modal-title">💸 Nova Variável</h3>
         <input type="text" id="variable-input-icon" class="input-field" placeholder="Ícone (ex: 🍔)" maxlength="4">
         <input type="text" id="variable-input-name" class="input-field" placeholder="Nome (ex: Comida, Uber)">
+        <select id="variable-input-cat" class="select-field">
+          <option value="🛒|Mercado">🛒 Mercado / Alimentação</option>
+          <option value="🚗|Transporte">🚗 Transporte / Uber</option>
+          <option value="🎮|Lazer">🎮 Lazer & Entretenimento</option>
+          <option value="📦|Outros">📦 Outros</option>
+        </select>
         <select id="variable-input-period" class="select-field">
           <option value="daily">📅 Diário</option>
           <option value="weekly">🗓️ Semanal</option>
@@ -568,6 +575,16 @@
   <input type="file" id="import-file" style="display: none;" onchange="handleFileImport(event)">
 
   <script>
+    function escapeHTML(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     const mensagensMotivacionais = [
       "☀️ Domingo: Prepare-se para uma semana de vitória financeira!",
       "🚀 Segunda: Controle o dinheiro, não deixe ele te controlar.",
@@ -630,9 +647,40 @@
       return list;
     })();
 
+    function getCurrentMonthKey() {
+      const now = new Date();
+      const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      return `${months[now.getMonth()]}/${String(now.getFullYear()).slice(-2)}`;
+    }
+
+    function getDaysInMonth(monthKey) {
+      if (!monthKey) return 30;
+      const parts = monthKey.split('/');
+      if (parts.length !== 2) return 30;
+      const mName = parts[0].toLowerCase();
+      const yr = 2000 + parseInt(parts[1], 10);
+      const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      const mIdx = months.indexOf(mName);
+      if (mIdx === -1) return 30;
+      return new Date(yr, mIdx + 1, 0).getDate();
+    }
+
     let currentType = 'saida', editingId = null, currentFilter = 'all', currentView = 'lancamentos', variableViewPeriod = 'daily', activeVariableBudgetId = null;
 
-    let state = JSON.parse(localStorage.getItem('jc_fin_v7')) || { theme: 'dark', currentMonthIdx: allMonths.indexOf('jun/26')!==-1?allMonths.indexOf('jun/26'):0, monthsList: allMonths, familyCode: '', emergencyReserve: {current:0,target:10000}, customTags: ['!urgente'], variableBudgets: [], variableSpends: [], creditCards: [], transactions: [] };
+    const defaultMonthIdx = allMonths.indexOf(getCurrentMonthKey()) !== -1 ? allMonths.indexOf(getCurrentMonthKey()) : 0;
+    
+    let state = JSON.parse(localStorage.getItem('jc_fin_v7')) || { 
+      theme: 'dark', 
+      currentMonthIdx: defaultMonthIdx, 
+      monthsList: allMonths, 
+      familyCode: '', 
+      emergencyReserve: {current:0, target:10000}, 
+      customTags: ['!urgente'], 
+      variableBudgets: [], 
+      variableSpends: [], 
+      creditCards: [], 
+      transactions: [] 
+    };
     state.monthsList = allMonths;
 
     if (auth) {
@@ -640,7 +688,7 @@
         const screen = document.getElementById('auth-screen');
         if (user) {
           currentUser = user; screen.style.display = 'none';
-          document.getElementById('user-email-display').innerText = `Logado como: ${user.email}`;
+          document.getElementById('user-email-display').innerText = `Logado como: ${escapeHTML(user.email)}`;
           initFirebaseListener();
         } else { currentUser = null; screen.style.display = 'flex'; if(unsubscribe) unsubscribe(); }
       });
@@ -666,7 +714,16 @@
       if(!db || !currentUser) return;
       if(unsubscribe) unsubscribe();
       unsubscribe = (state.familyCode ? db.collection('financas_casal').doc(state.familyCode) : db.collection('users').doc(currentUser.uid))
-        .onSnapshot(doc => { if(doc.exists){ Object.assign(state, doc.data()); localStorage.setItem('jc_fin_v7', JSON.stringify(state)); render(); } else saveData(); });
+        .onSnapshot(doc => { 
+          if(doc.exists){ 
+            const normalized = normalizeState(doc.data());
+            if(normalized) {
+              Object.assign(state, normalized); 
+              localStorage.setItem('jc_fin_v7', JSON.stringify(state)); 
+              render(); 
+            }
+          } else saveData(); 
+        });
     }
 
     function toggleTheme() { state.theme = state.theme === 'dark' ? 'light' : 'dark'; document.body.setAttribute('data-theme', state.theme); saveData(); }
@@ -693,6 +750,7 @@
       document.getElementById('res-fill').style.width = `${Math.min((state.emergencyReserve.current/(state.emergencyReserve.target||1))*100,100)}%`;
       
       updateTagsUI();
+      updateCardsDropdown();
       if(currentView==='lancamentos') renderLancamentos(mk);
       else if(currentView==='calendario') renderCalendario(mk);
       else if(currentView==='horizonte') renderHorizonte();
@@ -700,36 +758,73 @@
     }
 
     function renderLancamentos(mk) {
-      renderVariables(); // Chama a função RESTAURADA das variáveis
+      renderVariables();
       let items = (state.transactions||[]).filter(t=>t.month===mk);
-      const search = document.getElementById('search-input').value.toLowerCase();
+      const searchRaw = document.getElementById('search-input').value.trim();
+      const search = searchRaw.toLowerCase();
+
+      if (search.startsWith('dia ')) {
+        const dNum = parseInt(search.replace('dia ', ''), 10);
+        if (!isNaN(dNum)) items = items.filter(t => t.day === dNum);
+      } else if (search) {
+        items = items.filter(t => 
+          (t.desc && t.desc.toLowerCase().includes(search)) || 
+          (t.cat && t.cat.toLowerCase().includes(search)) || 
+          (t.tag && t.tag.toLowerCase().includes(search)) ||
+          (t.day && String(t.day) === search)
+        );
+      }
+
       if(currentFilter==='pending') items = items.filter(t=>!t.pago);
       if(currentFilter==='paid') items = items.filter(t=>t.pago);
-      if(search) items = items.filter(t=>t.desc.toLowerCase().includes(search) || t.cat.toLowerCase().includes(search) || (t.tag&&t.tag.toLowerCase().includes(search)));
       
       let ent=0, sai=0, saiPaga=0;
       (state.transactions||[]).filter(t=>t.month===mk).forEach(i=>{ if(i.tipo==='entrada') ent+=i.val; else { sai+=i.val; if(i.pago) saiPaga+=i.val; } });
-      const pct = ent>0 ? Math.min(Math.round((sai/ent)*100),100):0;
-      document.getElementById('progress-percent').innerText=`${pct}%`; document.getElementById('progress-fill').style.width=`${pct}%`;
-      document.getElementById('total-entradas').innerText=formatCurrency(ent); document.getElementById('total-saidas').innerText=`${formatCurrency(saiPaga)} / ${formatCurrency(sai)}`;
+      
+      const pctReal = ent > 0 ? Math.round((sai / ent) * 100) : 0;
+      const pctVisual = Math.min(pctReal, 100);
+      const progressFill = document.getElementById('progress-fill');
+      document.getElementById('progress-percent').innerText = `${pctReal}%`;
+      progressFill.style.width = `${pctVisual}%`;
+      progressFill.style.background = pctReal > 100 ? 'var(--red-accent)' : 'linear-gradient(90deg, var(--primary-orange), #FF8A65)';
+
+      document.getElementById('total-entradas').innerText=formatCurrency(ent); 
+      document.getElementById('total-saidas').innerText=`${formatCurrency(saiPaga)} / ${formatCurrency(sai)}`;
       
       const c = document.getElementById('content-items-list'); c.innerHTML='';
       if(!items.length) { c.innerHTML=`<div style="text-align:center; color:var(--text-gray); margin-top:20px;">Sem dados! Adicione um lançamento.</div>`; return; }
+      
       items.forEach(i=>{
-        const isEnt=i.tipo==='entrada', [icon]=i.cat.split('|');
+        const isEnt=i.tipo==='entrada', [icon]=(i.cat||'📦|Outros').split('|');
         c.innerHTML+=`
           <div class="item-card ${i.pago?'is-paid':''}">
-            <div class="item-left"><div class="cat-icon">${icon}</div><div><div class="item-title">${i.desc} ${isEnt?'<span class="badge badge-entrada">Ent</span>':''} ${i.isFixed?'<span class="badge badge-fixa">Fixa</span>':''} ${i.tag?`<span class="badge badge-tag">${i.tag}</span>`:''}</div><div class="item-sub">Dia ${i.day}</div></div></div>
-            <div class="item-right"><div class="item-val" style="color:var(--${isEnt||i.pago?'green':'red'}-accent)">${isEnt?'+':'-'}${formatCurrency(i.val)}</div><div class="item-actions"><button class="btn-icon btn-pay ${i.pago?'paid':''}" onclick="toggleStatus(${i.id})">${i.pago?'✓':'◯'}</button><button class="btn-icon" onclick="editTransaction(${i.id})">✏️</button><button class="btn-icon" onclick="deleteTransaction(${i.id})">🗑️</button></div></div>
+            <div class="item-left">
+              <div class="cat-icon">${escapeHTML(icon)}</div>
+              <div>
+                <div class="item-title">
+                  ${escapeHTML(i.desc)} 
+                  ${isEnt?'<span class="badge badge-entrada">Ent</span>':''} 
+                  ${i.isFixed?'<span class="badge badge-fixa">Fixa</span>':''} 
+                  ${i.tag?`<span class="badge badge-tag">${escapeHTML(i.tag)}</span>`:''}
+                </div>
+                <div class="item-sub">Dia ${i.day}</div>
+              </div>
+            </div>
+            <div class="item-right">
+              <div class="item-val" style="color:var(--${isEnt||i.pago?'green':'red'}-accent)">
+                ${isEnt?'+':'-'}${formatCurrency(i.val)}
+              </div>
+              <div class="item-actions">
+                <button class="btn-icon btn-pay ${i.pago?'paid':''}" onclick="toggleStatus(${i.id})">${i.pago?'✓':'◯'}</button>
+                <button class="btn-icon" onclick="editTransaction(${i.id})">✏️</button>
+                <button class="btn-icon" onclick="deleteTransaction(${i.id})">🗑️</button>
+              </div>
+            </div>
           </div>
         `;
       });
     }
 
-    // A FUNÇÃO FOI TOTALMENTE RESTAURADA AQUI! 👇
-    // Calcula quanto do limite diário foi "comido" por excessos de dias anteriores.
-    // Ex.: limite R$50, gasto R$70 hoje => amanhã começa com R$30 disponíveis.
-    // Se amanhã gastar R$40, o próximo dia começa com R$40 disponíveis.
     function getLocalDateKey(date = new Date()) {
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -745,8 +840,6 @@
           return map;
         }, {});
 
-      // Começa no primeiro dia com gasto registrado. Assim, não criamos
-      // "dívida" artificial antes do usuário começar a usar o controle.
       const dates = Object.keys(spends).sort();
       if (!dates.length) {
         return { carry: 0, available: limit, targetSpent: 0, targetExcess: 0 };
@@ -768,9 +861,6 @@
         carry = excess;
       }
 
-      // "carry" aqui é o excesso gerado pelo próprio targetDate.
-      // Para mostrar o disponível de hoje, precisamos calcular somente
-      // o excesso acumulado ANTES de hoje.
       let previousCarry = 0;
       for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
         const key = getLocalDateKey(d);
@@ -809,8 +899,7 @@
         let statusText = '';
         let statusClass = 'good';
 
-        const relevantSpends = (state.variableSpends || [])
-          .filter(s => s.budgetId === b.id);
+        const relevantSpends = (state.variableSpends || []).filter(s => s.budgetId === b.id);
 
         if (b.period === 'daily') {
           const daily = calculateDailyCarry(b.id, baseLimit, todayStr);
@@ -868,9 +957,9 @@
           <div class="variable-budget-card">
             <div class="variable-budget-top">
               <div class="variable-budget-name">
-                <div class="variable-budget-icon">${b.icon||'💸'}</div>
+                <div class="variable-budget-icon">${escapeHTML(b.icon||'💸')}</div>
                 <div>
-                  <div class="variable-budget-name-text">${b.name}</div>
+                  <div class="variable-budget-name-text">${escapeHTML(b.name)}</div>
                   <div class="variable-budget-period">${b.period==='daily'?'Limite por dia':b.period==='weekly'?'Limite por semana':'Limite por mês'}</div>
                 </div>
               </div>
@@ -895,64 +984,409 @@
             </div>
 
             <div class="variable-budget-status ${statusClass}">${statusText}</div>
-            ${b.period==='daily' ? `<div class="variable-budget-mini"><span>Limite normal: ${formatCurrency(baseLimit)}</span><span>Hoje: ${todayStr.split('-').reverse().join('/')}</span></div>` : ''}
+            ${b.period==='daily' ? `<div class="variable-budget-mini"><span>Limite normal: ${formatCurrency(baseLimit)}</span><span>Hoje:${todayStr.split('-').reverse().join('/')}</span></div>` : ''}
           </div>
         `;
       }).join('');
     }
 
+    function deleteVariableBudget(id) {
+      if(!confirm('Apagar este controle, seus gastos e lançamentos vinculados?')) return;
+      const spendIds = (state.variableSpends || []).filter(s => s.budgetId === id).map(s => s.id);
+      state.transactions = (state.transactions || []).filter(t => !t.variableSpendId || !spendIds.includes(t.variableSpendId));
+      state.variableBudgets = (state.variableBudgets || []).filter(b => b.id !== id);
+      state.variableSpends = (state.variableSpends || []).filter(s => s.budgetId !== id);
+      saveData();
+      render();
+    }
+
+    function openVariableSpendModal(id, name) {
+      activeVariableBudgetId = id;
+      const b = (state.variableBudgets || []).find(x => x.id === id);
+      document.getElementById('variable-spend-modal-info').innerText = `Lançando em: ${escapeHTML(name || (b ? b.name : 'Gasto Variável'))}`;
+      document.getElementById('variable-spend-date').value = getLocalDateKey();
+      document.getElementById('variable-spend-value').value = '';
+      document.getElementById('variable-spend-note').value = '';
+      document.getElementById('modal-variable-spend').style.display = 'flex';
+    }
+
+    function closeVariableSpendModal() {
+      document.getElementById('modal-variable-spend').style.display = 'none';
+      activeVariableBudgetId = null;
+    }
+
+    function monthKeyFromDate(dateKey) {
+      const parts = String(dateKey || '').split('-');
+      if(parts.length !== 3) return state.monthsList[state.currentMonthIdx];
+      const year = Number(parts[0]);
+      const month = Number(parts[1]);
+      if(!year || !month) return state.monthsList[state.currentMonthIdx];
+      const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      return `${months[month-1]}/${String(year).slice(-2)}`;
+    }
+
+    function saveVariableSpend() {
+      const val = Number(document.getElementById('variable-spend-value').value);
+      const date = document.getElementById('variable-spend-date').value;
+      const note = document.getElementById('variable-spend-note').value.trim();
+      const createTx = document.getElementById('variable-create-transaction').checked;
+
+      if(!Number.isFinite(val) || val <= 0 || !date) {
+        return alert('Preencha um valor maior que zero e uma data válida.');
+      }
+      if(!activeVariableBudgetId) return alert('Selecione um controle de gasto.');
+
+      if(!state.variableSpends) state.variableSpends = [];
+      const spendId = Date.now();
+      const txId = spendId + 1;
+
+      state.variableSpends.push({
+        id: spendId,
+        budgetId: activeVariableBudgetId,
+        transactionId: createTx ? txId : null,
+        value: Math.round(val * 100) / 100,
+        date,
+        note
+      });
+
+      if(createTx) {
+        const b = (state.variableBudgets || []).find(x => x.id === activeVariableBudgetId);
+        const cat = (b && b.cat) ? b.cat : (b ? `${b.icon||'💸'}|${b.name}` : '🛒|Mercado');
+        if(!state.transactions) state.transactions = [];
+        const d = parseInt(date.split('-')[2], 10);
+        state.transactions.push({
+          id: txId,
+          variableSpendId: spendId,
+          month: monthKeyFromDate(date),
+          day: d,
+          desc: (b ? b.name : 'Gasto Variável') + (note ? ` - ${note}` : ''),
+          val: Math.round(val * 100) / 100,
+          cat: cat,
+          tipo: 'saida',
+          tag: '',
+          pago: true
+        });
+      }
+
+      saveData();
+      closeVariableSpendModal();
+      render();
+    }
+
     function setVariableViewPeriod(p) { variableViewPeriod = p; document.querySelectorAll('.variable-period-btn').forEach(b=>b.classList.remove('active')); document.getElementById(`var-period-${p}`).classList.add('active'); renderVariables(); }
-    function openVariableBudgetModal(i='',n='') { document.getElementById('variable-input-icon').value=i; document.getElementById('variable-input-name').value=n; document.getElementById('modal-variable-budget').style.display='flex'; }
+    
+    function openVariableBudgetModal(i='', n='', c='🛒|Mercado') { 
+      document.getElementById('variable-input-icon').value = i; 
+      document.getElementById('variable-input-name').value = n; 
+      document.getElementById('variable-input-cat').value = c; 
+      document.getElementById('modal-variable-budget').style.display='flex'; 
+    }
+    
     function closeVariableBudgetModal() { document.getElementById('modal-variable-budget').style.display='none'; }
+    
     function saveVariableBudget() { 
-      const name = document.getElementById('variable-input-name').value;
+      const name = document.getElementById('variable-input-name').value.trim();
       if(!name) return alert('Digite um nome!');
-      state.variableBudgets.push({ id:Date.now(), icon:document.getElementById('variable-input-icon').value||'💸', name, period:document.getElementById('variable-input-period').value, limit:Number(document.getElementById('variable-input-limit').value) });
+      state.variableBudgets.push({ 
+        id: Date.now(), 
+        icon: document.getElementById('variable-input-icon').value.trim() || '💸', 
+        name, 
+        cat: document.getElementById('variable-input-cat').value,
+        period: document.getElementById('variable-input-period').value, 
+        limit: Number(document.getElementById('variable-input-limit').value) || 0 
+      });
       saveData(); closeVariableBudgetModal(); render();
+    }
+
+    function filterByDay(d) {
+      switchView('lancamentos');
+      document.getElementById('search-input').value = `Dia ${d}`;
+      render();
     }
 
     function renderCalendario(mk) {
       const g = document.getElementById('calendar-matrix-grid'); g.innerHTML='';
-      let s = 0; (state.transactions||[]).filter(t=>t.month===mk && t.tipo==='saida').forEach(t=>s+=t.val);
-      document.getElementById('diario-medio-val').innerText = formatCurrency(s/30);
-      for(let d=1; d<=30; d++) g.innerHTML+=`<div class="cal-day-cell" onclick="switchView('lancamentos'); document.getElementById('search-input').value='Dia ${d}'; render();"><span class="cal-day-num">${d}</span></div>`;
+      const totalDays = getDaysInMonth(mk);
+      let totalSaidas = 0;
+      (state.transactions||[]).filter(t=>t.month===mk && t.tipo==='saida').forEach(t=>totalSaidas+=t.val);
+      
+      document.getElementById('diario-medio-val').innerText = formatCurrency(totalSaidas / totalDays);
+      
+      for(let d=1; d<=totalDays; d++) {
+        let daySpent = 0;
+        (state.transactions||[]).filter(t=>t.month===mk && t.day===d && t.tipo==='saida').forEach(t=>daySpent+=t.val);
+        
+        g.innerHTML+=`
+          <div class="cal-day-cell" onclick="filterByDay(${d})">
+            <span class="cal-day-num">${d}</span>
+            ${daySpent > 0 ? `<span style="font-size:0.62rem; font-weight:800; color:var(--red-accent); margin-top:2px;">-${formatCurrency(daySpent).replace('R$','').trim()}</span>` : '<span style="font-size:0.65rem; color:var(--text-gray);">-</span>'}
+          </div>
+        `;
+      }
     }
     
     function renderHorizonte() {
       const c = document.getElementById('horizon-list-container'); c.innerHTML='';
       for(let i=state.currentMonthIdx; i<Math.min(state.currentMonthIdx+12, state.monthsList.length); i++){
         let e=0, s=0; (state.transactions||[]).filter(t=>t.month===state.monthsList[i]).forEach(t=>{ if(t.tipo==='entrada') e+=t.val; else s+=t.val; });
-        c.innerHTML+=`<div class="horizon-item"><div><div class="horizon-month">${state.monthsList[i]}</div><div class="horizon-sub">Entradas: ${formatCurrency(e)}</div></div><div style="color:var(--${e-s>=0?'green':'red'}-accent); font-weight:800;">${formatCurrency(e-s)}</div></div>`;
+        c.innerHTML+=`
+          <div class="horizon-item">
+            <div>
+              <div class="horizon-month">${escapeHTML(state.monthsList[i])}</div>
+              <div class="horizon-sub">Entradas: ${formatCurrency(e)}</div>
+            </div>
+            <div style="color:var(--${e-s>=0?'green':'red'}-accent); font-weight:800;">${formatCurrency(e-s)}</div>
+          </div>
+        `;
       }
     }
 
     function renderCartoes() {
       const c = document.getElementById('cards-container-list'); c.innerHTML='';
-      (state.creditCards||[]).forEach(cc=>{ c.innerHTML+=`<div class="item-card"><div class="item-left"><div class="cat-icon">💳</div><div><div class="item-title">${cc.name}</div><div class="item-sub">Limite: ${formatCurrency(cc.limit)}</div></div></div><button class="btn-icon" onclick="deleteCard(${cc.id})">🗑️</button></div>`; });
+      if(!state.creditCards || !state.creditCards.length) {
+        c.innerHTML = `<div style="text-align:center; color:var(--text-gray); font-size:0.85rem; padding:20px;">Nenhum cartão cadastrado. Clique em "+ Novo" para adicionar.</div>`;
+        return;
+      }
+      
+      const currentMk = state.monthsList[state.currentMonthIdx];
+      
+      state.creditCards.forEach(cc=>{
+        let spentThisMonth = 0;
+        let spentTotalUnpaid = 0;
+        (state.transactions || []).forEach(t => {
+          if (t.cardId === cc.id && t.tipo === 'saida') {
+            if (t.month === currentMk) spentThisMonth += t.val;
+            if (!t.pago) spentTotalUnpaid += t.val;
+          }
+        });
+
+        const limit = Number(cc.limit) || 0;
+        const available = Math.max(0, limit - spentTotalUnpaid);
+        const pctUsed = limit > 0 ? Math.min((spentTotalUnpaid / limit) * 100, 100) : 0;
+
+        c.innerHTML += `
+          <div class="item-card" style="flex-direction:column; align-items:stretch; gap:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="item-left">
+                <div class="cat-icon">💳</div>
+                <div>
+                  <div class="item-title">${escapeHTML(cc.name)}</div>
+                  <div class="item-sub">Limite: ${formatCurrency(limit)}</div>
+                </div>
+              </div>
+              <button class="btn-icon" onclick="deleteCard(${cc.id})">🗑️</button>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; color:var(--text-gray); margin-bottom:4px;">
+                <span>Fatura ${currentMk}: ${formatCurrency(spentThisMonth)}</span>
+                <span>Disponível: ${formatCurrency(available)}</span>
+              </div>
+              <div class="progress-bar-bg" style="height:6px;">
+                <div class="progress-bar-fill" style="width:${pctUsed}%; background:${pctUsed > 90 ? 'var(--red-accent)' : 'var(--blue-accent)'}"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
     }
 
-    function updateTagsUI() { const sel = document.getElementById('select-tag'); sel.innerHTML='<option value="">Sem Tag</option>'; (state.customTags||[]).forEach(t=>sel.innerHTML+=`<option value="${t}">${t}</option>`); }
-    function addCustomTag() { const v=document.getElementById('input-new-tag').value.trim(); if(v && !state.customTags.includes(v)){ state.customTags.push(v); saveData(); render(); } document.getElementById('input-new-tag').value=''; }
+    function updateTagsUI() { 
+      const sel = document.getElementById('select-tag'); 
+      sel.innerHTML='<option value="">Sem Tag</option>'; 
+      (state.customTags||[]).forEach(t=>sel.innerHTML+=`<option value="${escapeHTML(t)}">${escapeHTML(t)}</option>`); 
+    }
 
-    function openModal(){ document.getElementById('modal').style.display='flex'; }
-    function closeModal(){ document.getElementById('modal').style.display='none'; editingId=null; }
+    function updateCardsDropdown() {
+      const sel = document.getElementById('select-card');
+      if(!sel) return;
+      sel.innerHTML = '<option value="">Selecionar Cartão (Opcional)</option>';
+      (state.creditCards || []).forEach(cc => {
+        sel.innerHTML += `<option value="${cc.id}">${escapeHTML(cc.name)}</option>`;
+      });
+    }
+
+    function addCustomTag() { 
+      const v=document.getElementById('input-new-tag').value.trim(); 
+      if(v && !state.customTags.includes(v)){ 
+        state.customTags.push(v); 
+        saveData(); 
+        render(); 
+      } 
+      document.getElementById('input-new-tag').value=''; 
+    }
+
+    function openModal(){ 
+      if (!editingId) {
+        document.getElementById('modal-title').innerText = 'Novo Lançamento';
+        document.getElementById('input-day').value = new Date().getDate();
+        document.getElementById('input-desc').value = '';
+        document.getElementById('input-val').value = '';
+        document.getElementById('select-cat').value = '🛒|Mercado';
+        document.getElementById('select-tag').value = '';
+        document.getElementById('check-fixed').checked = false;
+        document.getElementById('check-credit').checked = false;
+        document.getElementById('input-installments').value = 1;
+        toggleInstallments(false);
+        setType('saida');
+      }
+      document.getElementById('modal').style.display='flex'; 
+    }
+
+    function closeModal(){ 
+      document.getElementById('modal').style.display='none'; 
+      editingId=null; 
+    }
+
     function toggleInstallments(c){ document.getElementById('installments-box').style.display=c?'block':'none'; }
-    function toggleStatus(id){ const i=state.transactions.find(t=>t.id===id); if(i){ i.pago=!i.pago; if(i.pago) playCoinSound(); saveData(); render(); } }
-    function deleteTransaction(id){ if(confirm('Apagar?')){ state.transactions=state.transactions.filter(t=>t.id!==id); saveData(); render(); } }
-    function editTransaction(id){ const i=state.transactions.find(t=>t.id===id); if(!i) return; editingId=id; document.getElementById('input-val').value=i.val; document.getElementById('input-desc').value=i.desc; setType(i.tipo); openModal(); }
+
+    function toggleStatus(id){ 
+      const i=state.transactions.find(t=>t.id===id); 
+      if(i){ 
+        i.pago=!i.pago; 
+        if(i.pago) playCoinSound(); 
+        saveData(); 
+        render(); 
+      } 
+    }
+
+    function deleteTransaction(id){ 
+      const t = (state.transactions || []).find(x => x.id === id);
+      if(!t) return;
+      if(confirm('Apagar este lançamento?')){ 
+        if(t.variableSpendId) {
+          state.variableSpends = (state.variableSpends || []).filter(s => s.id !== t.variableSpendId);
+        }
+        state.transactions=state.transactions.filter(x=>x.id!==id); 
+        saveData(); 
+        render(); 
+      } 
+    }
+
+    function editTransaction(id){ 
+      const i=state.transactions.find(t=>t.id===id); 
+      if(!i) return; 
+      editingId=id; 
+      document.getElementById('modal-title').innerText = 'Editar Lançamento';
+      document.getElementById('input-day').value = i.day || 1;
+      document.getElementById('input-desc').value = i.desc || '';
+      document.getElementById('input-val').value = i.val || '';
+      if(i.cat) document.getElementById('select-cat').value = i.cat;
+      if(i.tag !== undefined) document.getElementById('select-tag').value = i.tag;
+      document.getElementById('check-fixed').checked = !!i.isFixed;
+      document.getElementById('check-credit').checked = !!i.isInstallment;
+      document.getElementById('input-installments').value = i.totalInstallments || 1;
+      toggleInstallments(!!i.isInstallment);
+      if(i.cardId) document.getElementById('select-card').value = i.cardId;
+      setType(i.tipo || 'saida'); 
+      openModal(); 
+    }
 
     function saveTransaction() {
-      const d=parseInt(document.getElementById('input-day').value), v=parseFloat(document.getElementById('input-val').value), n=document.getElementById('input-desc').value;
-      if(!d||!v) return alert('Preencha os dados!');
-      if(editingId) { const i=state.transactions.find(t=>t.id===editingId); i.day=d; i.val=v; i.desc=n; i.tipo=currentType; }
-      else state.transactions.push({id:Date.now(), month:state.monthsList[state.currentMonthIdx], day:d, desc:n, val:v, cat:document.getElementById('select-cat').value, tipo:currentType, tag:document.getElementById('select-tag').value, pago:false});
-      saveData(); closeModal(); render();
+      const d=parseInt(document.getElementById('input-day').value, 10);
+      const v=parseFloat(document.getElementById('input-val').value);
+      const n=document.getElementById('input-desc').value.trim();
+      const cat=document.getElementById('select-cat').value;
+      const tag=document.getElementById('select-tag').value;
+      const isFixed=document.getElementById('check-fixed').checked;
+      const isCredit=document.getElementById('check-credit').checked && currentType === 'saida';
+      const installments=parseInt(document.getElementById('input-installments').value, 10) || 1;
+      const cardId=isCredit && document.getElementById('select-card') ? parseInt(document.getElementById('select-card').value, 10) : null;
+
+      if(!d || isNaN(d) || d < 1 || d > 31 || !v || isNaN(v) || v <= 0 || !n) {
+        return alert('Preencha o dia (1-31), descrição e valor válido!');
+      }
+
+      if(editingId) { 
+        const i=state.transactions.find(t=>t.id===editingId); 
+        if(i) {
+          i.day=d; 
+          i.val=Math.round(v * 100) / 100; 
+          i.desc=n; 
+          i.tipo=currentType; 
+          i.cat=cat; 
+          i.tag=tag; 
+          i.isFixed=isFixed; 
+          i.cardId=cardId;
+        }
+      } else {
+        if (isCredit && installments > 1) {
+          const instVal = Math.round((v / installments) * 100) / 100;
+          const groupId = Date.now();
+          for(let k=0; k<installments; k++) {
+            const targetMonthIdx = state.currentMonthIdx + k;
+            if(targetMonthIdx < state.monthsList.length) {
+              state.transactions.push({
+                id: groupId + k,
+                groupId,
+                month: state.monthsList[targetMonthIdx],
+                day: d,
+                desc: `${n} (${k+1}/${installments})`,
+                val: instVal,
+                cat,
+                tipo: currentType,
+                tag,
+                pago: false,
+                isInstallment: true,
+                installmentNum: k+1,
+                totalInstallments: installments,
+                cardId
+              });
+            }
+          }
+        } else if (isFixed) {
+          const fixedGroupId = Date.now();
+          for(let targetMonthIdx = state.currentMonthIdx; targetMonthIdx < state.monthsList.length; targetMonthIdx++) {
+            state.transactions.push({
+              id: fixedGroupId + targetMonthIdx,
+              fixedGroupId,
+              month: state.monthsList[targetMonthIdx],
+              day: d,
+              desc: n,
+              val: Math.round(v * 100) / 100,
+              cat,
+              tipo: currentType,
+              tag,
+              pago: false,
+              isFixed: true,
+              cardId
+            });
+          }
+        } else {
+          state.transactions.push({
+            id: Date.now(), 
+            month: state.monthsList[state.currentMonthIdx], 
+            day: d, 
+            desc: n, 
+            val: Math.round(v * 100) / 100, 
+            cat, 
+            tipo: currentType, 
+            tag, 
+            pago: false,
+            isFixed: false,
+            cardId
+          });
+        }
+      }
+
+      saveData(); 
+      closeModal(); 
+      render();
     }
 
     function openCardModal(){ document.getElementById('modal-card').style.display='flex'; }
     function closeCardModal(){ document.getElementById('modal-card').style.display='none'; }
-    function saveCardModal(){ state.creditCards.push({id:Date.now(), name:document.getElementById('input-card-name').value, limit:Number(document.getElementById('input-card-limit').value)}); saveData(); closeCardModal(); render(); }
-    function deleteCard(id){ state.creditCards=state.creditCards.filter(c=>c.id!==id); saveData(); render(); }
+    function saveCardModal(){ 
+      const name=document.getElementById('input-card-name').value.trim(); 
+      const limit=Number(document.getElementById('input-card-limit').value); 
+      if(!name||!Number.isFinite(limit)||limit<=0) return alert('Informe o nome e um limite maior que zero.'); 
+      state.creditCards.push({id:Date.now(), name, limit:Math.round(limit*100)/100}); 
+      saveData(); closeCardModal(); render(); 
+    }
+    function deleteCard(id){ 
+      if(!confirm('Deseja excluir este cartão?')) return;
+      state.creditCards=state.creditCards.filter(c=>c.id!==id); 
+      saveData(); render(); 
+    }
 
     function openMetaModal(){ document.getElementById('input-modal-meta').value=state.emergencyReserve.target; document.getElementById('modal-meta').style.display='flex'; }
     function closeMetaModal(){ document.getElementById('modal-meta').style.display='none'; }
@@ -960,15 +1394,61 @@
 
     function openEmergencyModal(){ document.getElementById('modal-emergency').style.display='flex'; }
     function closeEmergencyModal(){ document.getElementById('modal-emergency').style.display='none'; }
-    function handleEmergencyOp(t){ const v=Number(document.getElementById('input-res-val').value); if(!v) return; if(t==='deposit') state.emergencyReserve.current+=v; else state.emergencyReserve.current-=v; saveData(); closeEmergencyModal(); render(); }
+    function handleEmergencyOp(t){ const v=Number(document.getElementById('input-res-val').value); if(!Number.isFinite(v)||v<=0) return alert('Informe um valor maior que zero.'); if(t==='deposit') state.emergencyReserve.current+=v; else state.emergencyReserve.current=Math.max(0,state.emergencyReserve.current-v); saveData(); closeEmergencyModal(); render(); }
 
     function openShareModal(){ document.getElementById('modal-share').style.display='flex'; }
     function closeShareModal(){ document.getElementById('modal-share').style.display='none'; }
-    function connectFamilyCode(){ state.familyCode=document.getElementById('input-family-code').value; saveData(); initFirebaseListener(); closeShareModal(); alert('Conectado!'); }
+    function connectFamilyCode(){ state.familyCode=document.getElementById('input-family-code').value.trim(); saveData(); initFirebaseListener(); closeShareModal(); alert('Conectado!'); }
 
-    function exportBackup() { const a=document.createElement('a'); a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(state)); a.download="backup.json"; a.click(); }
+    function exportBackup() { 
+      const a=document.createElement('a'); 
+      a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(state)); 
+      a.download=`backup_jc_financas_${new Date().toISOString().slice(0,10)}.json`; 
+      a.click(); 
+    }
+    
     function importBackup() { document.getElementById('import-file').click(); }
-    function handleFileImport(e) { const r=new FileReader(); r.onload=ev=>{ state=JSON.parse(ev.target.result); saveData(); render(); }; r.readAsText(e.target.files[0]); }
+    
+    function normalizeState(imported) {
+      if (!imported || typeof imported !== 'object') return null;
+      return {
+        theme: imported.theme === 'light' ? 'light' : 'dark',
+        currentMonthIdx: typeof imported.currentMonthIdx === 'number' && imported.currentMonthIdx >= 0 && imported.currentMonthIdx < allMonths.length ? imported.currentMonthIdx : defaultMonthIdx,
+        monthsList: allMonths,
+        familyCode: typeof imported.familyCode === 'string' ? imported.familyCode : '',
+        emergencyReserve: {
+          current: imported.emergencyReserve && typeof imported.emergencyReserve.current === 'number' ? imported.emergencyReserve.current : 0,
+          target: imported.emergencyReserve && typeof imported.emergencyReserve.target === 'number' ? imported.emergencyReserve.target : 10000
+        },
+        customTags: Array.isArray(imported.customTags) ? imported.customTags.map(String) : ['!urgente'],
+        variableBudgets: Array.isArray(imported.variableBudgets) ? imported.variableBudgets : [],
+        variableSpends: Array.isArray(imported.variableSpends) ? imported.variableSpends : [],
+        creditCards: Array.isArray(imported.creditCards) ? imported.creditCards : [],
+        transactions: Array.isArray(imported.transactions) ? imported.transactions : []
+      };
+    }
+
+    function handleFileImport(e) { 
+      const file=e.target.files?.[0]; 
+      if(!file) return; 
+      const r=new FileReader(); 
+      r.onload=ev=>{ 
+        try { 
+          const imported=JSON.parse(ev.target.result); 
+          const normalized = normalizeState(imported);
+          if(!normalized) throw new Error('Formato inválido'); 
+          state = normalized;
+          saveData(); 
+          render(); 
+          alert('Backup importado com sucesso!'); 
+        } catch(err) { 
+          alert('Não foi possível importar o backup. Verifique se o arquivo JSON está correto.'); 
+        } finally { 
+          e.target.value=''; 
+        } 
+      }; 
+      r.readAsText(file); 
+    }
 
     document.getElementById('prev-month').onclick = () => { if(state.currentMonthIdx>0){ state.currentMonthIdx--; render(); } };
     document.getElementById('next-month').onclick = () => { if(state.currentMonthIdx<state.monthsList.length-1){ state.currentMonthIdx++; render(); } };
