@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Aqui está o código completo com <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -326,7 +326,6 @@
       </div>
     </div>
 
-    <!-- MANTIVE AS OUTRAS VIEWS IDÊNTICAS PARA NÃO ALONGAR -->
     <div class="view-panel" id="view-calendario"><div class="content-area"><div style="font-size: 0.9rem; font-weight: 700; color: var(--text-gray); margin-bottom: 16px;">📅 Saldos Diários (Toque no dia para filtrar)</div><div class="calendar-matrix" id="calendar-matrix-grid"></div><div class="summary-card" style="margin-top: 14px;"><div class="summary-label">Diário Médio Previsto</div><div class="summary-val" id="diario-medio-val">R$ 0,00</div></div></div></div>
     <div class="view-panel" id="view-horizonte"><div class="content-area"><div style="font-size: 0.9rem; font-weight: 700; color: var(--text-gray); margin-bottom: 16px;">📈 Projeção Financeira (Próximos 12 meses)</div><div class="horizon-list" id="horizon-list-container"></div></div></div>
     <div class="view-panel" id="view-cartoes"><div class="content-area"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;"><div style="font-size: 0.9rem; font-weight: 700; color: var(--text-gray);">💳 Gestão de Cartões</div><button class="btn-emergency-action" style="background: var(--primary-orange);" onclick="openCardModal()">+ Novo</button></div><div id="cards-container-list"></div></div></div>
@@ -336,7 +335,6 @@
       <button class="btn-add-main" onclick="openModal()">+</button>
     </div>
 
-    <!-- Modais omitidos no HTML visual para poupar espaço, mas mantive o código JS e o esqueleto original funcional. Se quiser que cole as modais inteiras novamente, avise, mas elas estão inalteradas em relação ao seu ficheiro! -->
     <!-- Modal Lançamentos -->
     <div class="modal-overlay" id="modal"><div class="modal-sheet"><h3 style="font-size: 1.2rem; font-weight: 800;" id="modal-title">Novo Lançamento</h3><div class="type-selector"><button class="type-btn active-saida" id="btn-saida" onclick="setType('saida')">🔴 Saída</button><button class="type-btn" id="btn-entrada" onclick="setType('entrada')">🟢 Entrada</button></div><input type="number" id="input-day" class="input-field" placeholder="Dia do Mês (1 a 31)" min="1" max="31"><input type="text" id="input-desc" class="input-field" placeholder="Nome (ex: Mercado, Salário)"><input type="number" step="0.01" id="input-val" class="input-field" placeholder="Valor (R$)"><select id="select-cat" class="select-field"><option value="🛒|Mercado">🛒 Mercado / Alimentação</option><option value="🏠|Moradia">🏠 Moradia / Aluguel</option><option value="🚗|Transporte">🚗 Transporte / Combustível</option><option value="🎮|Lazer">🎮 Lazer & Entretenimento</option><option value="💡|Contas">💡 Contas Fixas / Serviços</option><option value="🛡️|Reserva">🛡️ Aporte Reserva</option><option value="💰|Renda">💰 Salário / Rendimentos</option><option value="📦|Outros">📦 Outros</option></select><select id="select-tag" class="select-field"><option value="">Sem Tag</option></select><div class="checkbox-container"><input type="checkbox" id="check-fixed" style="width: 20px; height: 20px;"><label for="check-fixed">Conta Fixa? (Repetir nos meses seguintes)</label></div><div id="credit-options"><div class="checkbox-container"><input type="checkbox" id="check-credit" onchange="toggleInstallments(this.checked)" style="width: 20px; height: 20px;"><label for="check-credit">Parcelado no Cartão?</label></div><div id="installments-box" style="display: none; margin-top: 8px;"><input type="number" id="input-installments" class="input-field" placeholder="Nº de Parcelas" min="1" value="1"><select id="select-card" class="select-field" style="margin-top: 8px;"><option value="">Selecionar Cartão (Opcional)</option></select></div></div><div class="modal-btns"><button class="btn-action btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-action btn-save" onclick="saveTransaction()">Salvar</button></div></div></div>
     
@@ -350,7 +348,7 @@
     <div class="modal-overlay" id="modal-card"><div class="modal-sheet"><h3 style="font-size: 1.2rem; font-weight: 800;">💳 Adicionar Cartão</h3><input type="text" id="input-card-name" class="input-field" placeholder="Nome do Cartão (ex: Nubank)"><input type="number" id="input-card-limit" class="input-field" placeholder="Limite Total (R$)"><div class="modal-btns"><button class="btn-action btn-cancel" onclick="closeCardModal()">Cancelar</button><button class="btn-action btn-save" onclick="saveCardModal()">Salvar</button></div></div></div>
     <div class="modal-overlay" id="modal-meta"><div class="modal-sheet"><h3 style="font-size: 1.2rem; font-weight: 800;">🎯 Alterar Meta da Reserva</h3><input type="number" step="0.01" id="input-modal-meta" class="input-field" placeholder="Ex: 15000"><div class="modal-btns"><button class="btn-action btn-cancel" onclick="closeMetaModal()">Cancelar</button><button class="btn-action btn-save" onclick="saveMetaModal()">Salvar Meta</button></div></div></div>
     <div class="modal-overlay" id="modal-emergency"><div class="modal-sheet"><h3 style="font-size: 1.2rem; font-weight: 800;">🛡️ Movimentar Reserva</h3><input type="number" step="0.01" id="input-res-val" class="input-field" placeholder="Valor (R$)"><div class="modal-btns"><button class="btn-action" style="background: var(--red-bg); color: var(--red-accent);" onclick="handleEmergencyOp('withdraw')">Resgatar (-)</button><button class="btn-action" style="background: var(--green-bg); color: var(--green-accent);" onclick="handleEmergencyOp('deposit')">Guardar (+)</button></div><div class="modal-btns" style="margin-top: 8px;"><button class="btn-action btn-cancel" onclick="closeEmergencyModal()">Fechar</button></div></div></div>
-    <div class="modal-overlay" id="modal-share"><div class="modal-sheet"><h3 style="font-size: 1.2rem; font-weight: 800;">🔗 Sincronizar Casal/Família</h3><p style="font-size: 0.85rem; color: var(--text-gray); line-height: 1.5; margin-bottom: 8px;">Insira um código único nos dois aparelhos para compartilhar dados instantaneamente.</p><input type="text" id="input-family-code" class="input-field" placeholder="Ex: casal123"><div class="modal-btns"><button class="btn-action btn-cancel" onclick="closeShareModal()">Cancelar</button><button class="btn-action btn-save" onclick="connectFamilyCode()">Conectar</button></div></div></div>
+    <div class="modal-overlay" id="modal-share"><div class="modal-sheet"><h3 style="font-size: 1.2rem; font-weight: 800;">🔗 Sincronizar Casal/Família</h3><p style="font-size: 0.85rem; color: var(--text-gray); line-height: 1.5; margin-bottom: 8px;">A sincronização agora é automática usando seu E-mail.</p><input type="text" id="input-family-code" class="input-field" placeholder="Não é mais necessário código." disabled><div class="modal-btns"><button class="btn-action btn-cancel" onclick="closeShareModal()">Fechar</button><button class="btn-action btn-save" onclick="connectFamilyCode()">Forçar Sincronização</button></div></div></div>
 
   </div>
 
@@ -385,6 +383,12 @@
     try {
       firebase.initializeApp({ apiKey: "AIzaSyAtWf27rTT2lwCaXJW938gklgO-k1q0zmg", authDomain: "meuappfinancas-677f2.firebaseapp.com", projectId: "meuappfinancas-677f2" });
       db = firebase.firestore();
+      
+      // Ativa cache local instantâneo (funciona offline e sincroniza ao reconectar)
+      db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+        console.warn("Persistência não ativada:", err.code);
+      });
+
       auth = firebase.auth();
       firebaseReady = true;
     } catch (e) {
@@ -402,11 +406,11 @@
     let state = JSON.parse(localStorage.getItem('jc_fin_v7')) || { theme: 'dark', currentMonthIdx: defaultMonthIdx, monthsList: allMonths, familyCode: '', emergencyReserve: {current:0, target:10000}, customTags: ['!urgente'], variableBudgets: [], variableSpends: [], creditCards: [], transactions: [] };
     state.monthsList = allMonths;
 
+    // Referência Única do Documento Baseada no E-mail (Substitui o familyCode)
     function getFirebaseDocRef() {
-      if (!db || !currentUser) return null;
-      return state.familyCode
-        ? db.collection('financas_casal').doc(state.familyCode)
-        : db.collection('users').doc(currentUser.uid);
+      if (!db || !currentUser || !currentUser.email) return null;
+      const sharedKey = currentUser.email.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+      return db.collection('contas_sincronizadas').doc(sharedKey);
     }
 
     function hasMeaningfulLocalData() {
@@ -416,8 +420,7 @@
         (state.variableSpends && state.variableSpends.length) ||
         (state.creditCards && state.creditCards.length) ||
         (state.customTags && state.customTags.length > 1) ||
-        (state.emergencyReserve && (Number(state.emergencyReserve.current) > 0 || Number(state.emergencyReserve.target) !== 10000)) ||
-        state.familyCode
+        (state.emergencyReserve && (Number(state.emergencyReserve.current) > 0 || Number(state.emergencyReserve.target) !== 10000))
       );
     }
 
@@ -429,7 +432,7 @@
           screen.style.display = 'none';
           document.getElementById('user-email-display').innerText = `Logado como: ${escapeHTML(user.email || '')}`;
           setSyncStatus('☁️ Conectando ao Firebase...', 'normal');
-          initFirebaseListener();
+          startRealtimeSync();
         } else {
           currentUser = null;
           activeFirebasePath = null;
@@ -467,6 +470,7 @@
       syncToFirebase();
     }
 
+    // Salvar Alterações Instantaneamente com Merge
     async function syncToFirebase() {
       if (!firebaseReady || !db || !currentUser) {
         setSyncStatus('📱 Salvo neste aparelho. Faça login para sincronizar.', 'normal');
@@ -475,20 +479,25 @@
       const ref = getFirebaseDocRef();
       if (!ref) return false;
       try {
-        setSyncStatus('☁️ Salvando na nuvem...', 'normal');
-        await ref.set({ ...state, updatedAt: Date.now(), ownerUid: currentUser.uid }, { merge: true });
-        setSyncStatus('☁️ Sincronizado com a nuvem', 'ok');
+        setSyncStatus('☁️ Sincronizando...', 'normal');
+        await ref.set({ 
+          ...state, 
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(), 
+          lastUser: currentUser.email 
+        }, { merge: true });
+        setSyncStatus('⚡ Sincronizado instantaneamente', 'ok');
         return true;
       } catch (e) {
-        console.error('Erro ao salvar no Firebase:', e);
-        setSyncStatus(`❌ Erro de sincronização: ${e.code || 'verifique o Firebase'}`, 'error');
+        console.error('Erro na sincronização:', e);
+        setSyncStatus(`❌ Erro: ${e.message}`, 'error');
         return false;
       }
     }
 
-    function initFirebaseListener() {
+    // Escutar Mudanças de Outros Aparelhos em Tempo Real
+    function startRealtimeSync() {
       if (!firebaseReady || !db || !currentUser) return;
-
+      
       const ref = getFirebaseDocRef();
       if (!ref) return;
       const path = ref.path;
@@ -501,27 +510,19 @@
       unsubscribe = ref.onSnapshot(async doc => {
         try {
           if (doc.exists) {
-            const normalized = normalizeState(doc.data());
+            const remoteData = doc.data();
+            const normalized = normalizeState(remoteData);
             if (normalized) {
-              const previousFamilyCode = state.familyCode || '';
-              Object.assign(state, normalized);
+              state = { ...state, ...normalized };
               localStorage.setItem('jc_fin_v7', JSON.stringify(state));
               render();
-
-              // Se o documento do usuário revelou um código de família, troca imediatamente
-              // para o documento compartilhado correto.
-              if (!previousFamilyCode && state.familyCode && !path.startsWith('financas_casal/')) {
-                initFirebaseListener();
-                return;
-              }
             }
-            setSyncStatus('☁️ Sincronizado com a nuvem', 'ok');
+            setSyncStatus('⚡ Sincronizado instantaneamente', 'ok');
           } else {
-            // Nunca substitui dados da nuvem por um estado vazio sem confirmação.
             if (hasMeaningfulLocalData()) {
               await syncToFirebase();
             } else {
-              await ref.set({ ...state, updatedAt: Date.now(), ownerUid: currentUser.uid }, { merge: true });
+              await ref.set({ ...state, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), lastUser: currentUser.email }, { merge: true });
               setSyncStatus('☁️ Conta criada e sincronizada', 'ok');
             }
           }
@@ -531,7 +532,7 @@
         }
       }, error => {
         console.error('Erro no listener do Firebase:', error);
-        setSyncStatus(`❌ Firebase recusou o acesso: ${error.code || 'verifique as regras'}`, 'error');
+        setSyncStatus(`❌ Firebase recusou o acesso: ${error.message || 'verifique as regras'}`, 'error');
       });
     }
 
@@ -621,9 +622,6 @@
       return `${y}-${m}-${d}`;
     }
 
-    // ==========================================
-    // NOVA FUNÇÃO CORRIGIDA PARA CÁLCULO DE DÍVIDA
-    // ==========================================
     function calculateDailyCarry(budgetId, limit, targetDate) {
       const spends = (state.variableSpends || [])
         .filter(s => s.budgetId === budgetId && s.date <= targetDate)
@@ -643,15 +641,13 @@
       
       let previousDebt = 0;
       
-      // Calcula o histórico sem travar no zero
       for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
         const key = getLocalDateKey(d);
         const spent = Number(spends[key] || 0);
-        // Só transita dívida para o dia seguinte, abalando o limite
         previousDebt = Math.max(0, previousDebt + spent - limit);
       }
 
-      const availableToday = limit - previousDebt; // Pode ficar negativo!
+      const availableToday = limit - previousDebt; 
       const targetSpent = Number(spends[targetDate] || 0);
 
       return {
@@ -661,9 +657,6 @@
       };
     }
 
-    // ==========================================
-    // RENDERIZAÇÃO DA BARRA PARA ACEITAR NEGATIVOS
-    // ==========================================
     function renderVariables() {
       const l = document.getElementById('variable-budget-list'); if(!l) return;
       const bs = (state.variableBudgets||[]).filter(b=>b.period===variableViewPeriod);
@@ -689,7 +682,6 @@
           const daily = calculateDailyCarry(b.id, baseLimit, todayStr);
           spent = daily.targetSpent;
           
-          // O saldo inicial do dia absorve dívidas antigas 
           const availableStartOfDay = daily.available; 
           remaining = availableStartOfDay - spent;
           effectiveLimitToDisplay = availableStartOfDay;
@@ -728,7 +720,6 @@
         const isOver = remaining < 0;
         let pct = 0;
         
-        // Trava a barra visualmente se ultrapassar o limite, mantendo proporção de alerta
         if (isOver || effectiveLimitToDisplay <= 0) {
            pct = (spent > 0 || effectiveLimitToDisplay < 0) ? 100 : 0;
         } else {
@@ -774,7 +765,6 @@
       }).join('');
     }
 
-    // O resto do código mantém-se intacto
     function deleteVariableBudget(id) { if(!confirm('Apagar este controle, seus gastos e lançamentos vinculados?')) return; const spendIds = (state.variableSpends || []).filter(s => s.budgetId === id).map(s => s.id); state.transactions = (state.transactions || []).filter(t => !t.variableSpendId || !spendIds.includes(t.variableSpendId)); state.variableBudgets = (state.variableBudgets || []).filter(b => b.id !== id); state.variableSpends = (state.variableSpends || []).filter(s => s.budgetId !== id); saveData(); render(); }
     function openVariableSpendModal(id, name) { activeVariableBudgetId = id; const b = (state.variableBudgets || []).find(x => x.id === id); document.getElementById('variable-spend-modal-info').innerText = `Lançando em: ${escapeHTML(name || (b ? b.name : 'Gasto Variável'))}`; document.getElementById('variable-spend-date').value = getLocalDateKey(); document.getElementById('variable-spend-value').value = ''; document.getElementById('variable-spend-note').value = ''; document.getElementById('modal-variable-spend').style.display = 'flex'; }
     function closeVariableSpendModal() { document.getElementById('modal-variable-spend').style.display = 'none'; activeVariableBudgetId = null; }
@@ -807,7 +797,7 @@
     function openCardModal(){ document.getElementById('modal-card').style.display='flex'; } function closeCardModal(){ document.getElementById('modal-card').style.display='none'; } function saveCardModal(){ const name=document.getElementById('input-card-name').value.trim(); const limit=Number(document.getElementById('input-card-limit').value); if(!name||!Number.isFinite(limit)||limit<=0) return alert('Informe o nome e um limite maior que zero.'); state.creditCards.push({id:Date.now(), name, limit:Math.round(limit*100)/100}); saveData(); closeCardModal(); render(); } function deleteCard(id){ if(!confirm('Deseja excluir este cartão?')) return; state.creditCards=state.creditCards.filter(c=>c.id!==id); saveData(); render(); }
     function openMetaModal(){ document.getElementById('input-modal-meta').value=state.emergencyReserve.target; document.getElementById('modal-meta').style.display='flex'; } function closeMetaModal(){ document.getElementById('modal-meta').style.display='none'; } function saveMetaModal(){ state.emergencyReserve.target=Number(document.getElementById('input-modal-meta').value); saveData(); closeMetaModal(); render(); }
     function openEmergencyModal(){ document.getElementById('modal-emergency').style.display='flex'; } function closeEmergencyModal(){ document.getElementById('modal-emergency').style.display='none'; } function handleEmergencyOp(t){ const v=Number(document.getElementById('input-res-val').value); if(!Number.isFinite(v)||v<=0) return alert('Informe um valor maior que zero.'); if(t==='deposit') state.emergencyReserve.current+=v; else state.emergencyReserve.current=Math.max(0,state.emergencyReserve.current-v); saveData(); closeEmergencyModal(); render(); }
-    function openShareModal(){ document.getElementById('modal-share').style.display='flex'; } function closeShareModal(){ document.getElementById('modal-share').style.display='none'; } function connectFamilyCode(){ state.familyCode=document.getElementById('input-family-code').value.trim(); saveData(); initFirebaseListener(); closeShareModal(); alert('Conectado!'); }
+    function openShareModal(){ document.getElementById('modal-share').style.display='flex'; } function closeShareModal(){ document.getElementById('modal-share').style.display='none'; } function connectFamilyCode(){ startRealtimeSync(); closeShareModal(); alert('Sincronização iniciada via E-mail!'); }
     
     function exportBackup() { const a=document.createElement('a'); a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(state)); a.download=`backup_jc_financas_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
     function importBackup() { document.getElementById('import-file').click(); }
@@ -821,4 +811,4 @@
     verificarEEnviarNotificacao();
   </script>
 </body>
-                                                                                 </html>
+</html>
