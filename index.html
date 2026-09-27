@@ -330,7 +330,7 @@
     <div class="view-panel" id="view-calendario"><div class="content-area"><div style="font-size: 0.9rem; font-weight: 700; color: var(--text-gray); margin-bottom: 16px;">📅 Saldos Diários (Toque no dia para filtrar)</div><div class="calendar-matrix" id="calendar-matrix-grid"></div><div class="summary-card" style="margin-top: 14px;"><div class="summary-label">Diário Médio Previsto</div><div class="summary-val" id="diario-medio-val">R$ 0,00</div></div></div></div>
     <div class="view-panel" id="view-horizonte"><div class="content-area"><div style="font-size: 0.9rem; font-weight: 700; color: var(--text-gray); margin-bottom: 16px;">📈 Projeção Financeira (Próximos 12 meses)</div><div class="horizon-list" id="horizon-list-container"></div></div></div>
     <div class="view-panel" id="view-cartoes"><div class="content-area"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;"><div style="font-size: 0.9rem; font-weight: 700; color: var(--text-gray);">💳 Gestão de Cartões</div><button class="btn-emergency-action" style="background: var(--primary-orange);" onclick="openCardModal()">+ Novo</button></div><div id="cards-container-list"></div></div></div>
-    <div class="view-panel" id="view-menu"><div class="content-area"><div class="config-section"><div class="config-title">👤 Conta Conectada</div><p id="user-email-display" style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 14px; font-weight: 600;"></p><button class="btn-action btn-cancel" onclick="handleLogout()" style="color: var(--red-accent); border-color: var(--red-accent);">Sair da Conta</button></div><div class="config-section"><div class="config-title">🔔 Lembretes & Motivação</div><p style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 14px; line-height: 1.4;">Ative as notificações para receber seu lembrete diário de lançamentos.</p><div style="display: flex; gap: 10px; flex-direction: column;"><button class="btn-action btn-save" onclick="ativarNotificacaoDiaria()">🔔 Ativar Notificações</button><button class="btn-action btn-cancel" onclick="testarNotificacao()">🧪 Testar Notificação</button></div></div><div class="config-section"><div class="config-title">🏷️ Gestão de Tags</div><input type="text" id="input-new-tag" class="input-field" placeholder="Ex: !viagem, #carro" style="margin-bottom: 10px;"><button class="btn-action btn-save" onclick="addCustomTag()">Adicionar Tag</button><div id="tags-list-box" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;"></div></div></div></div>
+    <div class="view-panel" id="view-menu"><div class="content-area"><div class="config-section"><div class="config-title">👤 Conta Conectada</div><p id="user-email-display" style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 8px; font-weight: 600;"></p><p id="sync-status" style="font-size: 0.78rem; color: var(--text-gray); margin-bottom: 14px; font-weight: 600;">☁️ Aguardando sincronização...</p><button class="btn-action btn-cancel" onclick="handleLogout()" style="color: var(--red-accent); border-color: var(--red-accent);">Sair da Conta</button></div><div class="config-section"><div class="config-title">🔔 Lembretes & Motivação</div><p style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 14px; line-height: 1.4;">Ative as notificações para receber seu lembrete diário de lançamentos.</p><div style="display: flex; gap: 10px; flex-direction: column;"><button class="btn-action btn-save" onclick="ativarNotificacaoDiaria()">🔔 Ativar Notificações</button><button class="btn-action btn-cancel" onclick="testarNotificacao()">🧪 Testar Notificação</button></div></div><div class="config-section"><div class="config-title">🏷️ Gestão de Tags</div><input type="text" id="input-new-tag" class="input-field" placeholder="Ex: !viagem, #carro" style="margin-bottom: 10px;"><button class="btn-action btn-save" onclick="addCustomTag()">Adicionar Tag</button><div id="tags-list-box" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;"></div></div></div></div>
 
     <div class="bottom-nav">
       <button class="btn-add-main" onclick="openModal()">+</button>
@@ -372,11 +372,25 @@
     function playCoinSound() { try { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const osc = audioCtx.createOscillator(), gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(987.77, audioCtx.currentTime); osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.08); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.35); } catch (e) {} }
 
     let db = null, auth = null, currentUser = null, unsubscribe = null;
+    let activeFirebasePath = null;
+    let firebaseReady = false;
+
+    function setSyncStatus(message, type = 'normal') {
+      const el = document.getElementById('sync-status');
+      if (!el) return;
+      el.innerText = message;
+      el.style.color = type === 'ok' ? 'var(--green-accent)' : (type === 'error' ? 'var(--red-accent)' : 'var(--text-gray)');
+    }
+
     try {
       firebase.initializeApp({ apiKey: "AIzaSyAtWf27rTT2lwCaXJW938gklgO-k1q0zmg", authDomain: "meuappfinancas-677f2.firebaseapp.com", projectId: "meuappfinancas-677f2" });
       db = firebase.firestore();
       auth = firebase.auth();
-    } catch (e) {}
+      firebaseReady = true;
+    } catch (e) {
+      console.error('Erro ao inicializar Firebase:', e);
+      setSyncStatus('❌ Firebase não foi inicializado.', 'error');
+    }
 
     const allMonths = (function(){ const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'], list = []; for(let y=2024; y<=2050; y++) for(let m=0; m<12; m++) list.push(`${months[m]}/${String(y).slice(-2)}`); return list; })();
     function getCurrentMonthKey() { const now = new Date(); const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']; return `${months[now.getMonth()]}/${String(now.getFullYear()).slice(-2)}`; }
@@ -388,15 +402,138 @@
     let state = JSON.parse(localStorage.getItem('jc_fin_v7')) || { theme: 'dark', currentMonthIdx: defaultMonthIdx, monthsList: allMonths, familyCode: '', emergencyReserve: {current:0, target:10000}, customTags: ['!urgente'], variableBudgets: [], variableSpends: [], creditCards: [], transactions: [] };
     state.monthsList = allMonths;
 
-    if (auth) { auth.onAuthStateChanged(user => { const screen = document.getElementById('auth-screen'); if (user) { currentUser = user; screen.style.display = 'none'; document.getElementById('user-email-display').innerText = `Logado como: ${escapeHTML(user.email)}`; initFirebaseListener(); } else { currentUser = null; screen.style.display = 'flex'; if(unsubscribe) unsubscribe(); } }); }
+    function getFirebaseDocRef() {
+      if (!db || !currentUser) return null;
+      return state.familyCode
+        ? db.collection('financas_casal').doc(state.familyCode)
+        : db.collection('users').doc(currentUser.uid);
+    }
 
-    function handleLogin() { const e = document.getElementById('auth-email').value, p = document.getElementById('auth-password').value, err = document.getElementById('auth-error'); auth.signInWithEmailAndPassword(e, p).catch(er => { err.innerText = er.message; err.style.display='block'; }); }
-    function handleSignUp() { const e = document.getElementById('auth-email').value, p = document.getElementById('auth-password').value, err = document.getElementById('auth-error'); auth.createUserWithEmailAndPassword(e, p).catch(er => { err.innerText = er.message; err.style.display='block'; }); }
-    function handleLogout() { if(auth) auth.signOut().then(()=>alert("Você saiu!")); }
+    function hasMeaningfulLocalData() {
+      return !!(
+        (state.transactions && state.transactions.length) ||
+        (state.variableBudgets && state.variableBudgets.length) ||
+        (state.variableSpends && state.variableSpends.length) ||
+        (state.creditCards && state.creditCards.length) ||
+        (state.customTags && state.customTags.length > 1) ||
+        (state.emergencyReserve && (Number(state.emergencyReserve.current) > 0 || Number(state.emergencyReserve.target) !== 10000)) ||
+        state.familyCode
+      );
+    }
 
-    function saveData() { localStorage.setItem('jc_fin_v7', JSON.stringify(state)); syncToFirebase(); }
-    function syncToFirebase() { if(!db || !currentUser) return; (state.familyCode ? db.collection('financas_casal').doc(state.familyCode) : db.collection('users').doc(currentUser.uid)).set({...state, updatedAt: Date.now()}, {merge:true}); }
-    function initFirebaseListener() { if(!db || !currentUser) return; if(unsubscribe) unsubscribe(); unsubscribe = (state.familyCode ? db.collection('financas_casal').doc(state.familyCode) : db.collection('users').doc(currentUser.uid)).onSnapshot(doc => { if(doc.exists){ const normalized = normalizeState(doc.data()); if(normalized) { Object.assign(state, normalized); localStorage.setItem('jc_fin_v7', JSON.stringify(state)); render(); } } else saveData(); }); }
+    if (auth) {
+      auth.onAuthStateChanged(user => {
+        const screen = document.getElementById('auth-screen');
+        if (user) {
+          currentUser = user;
+          screen.style.display = 'none';
+          document.getElementById('user-email-display').innerText = `Logado como: ${escapeHTML(user.email || '')}`;
+          setSyncStatus('☁️ Conectando ao Firebase...', 'normal');
+          initFirebaseListener();
+        } else {
+          currentUser = null;
+          activeFirebasePath = null;
+          screen.style.display = 'flex';
+          setSyncStatus('🔐 Faça login para sincronizar seus dados.', 'normal');
+          if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+        }
+      });
+    }
+
+    function handleLogin() {
+      const e = document.getElementById('auth-email').value.trim();
+      const p = document.getElementById('auth-password').value;
+      const err = document.getElementById('auth-error');
+      if (!auth) { err.innerText = 'Firebase não está disponível. Verifique a configuração.'; err.style.display='block'; return; }
+      err.style.display='none';
+      auth.signInWithEmailAndPassword(e, p).catch(er => { console.error(er); err.innerText = er.message; err.style.display='block'; });
+    }
+
+    function handleSignUp() {
+      const e = document.getElementById('auth-email').value.trim();
+      const p = document.getElementById('auth-password').value;
+      const err = document.getElementById('auth-error');
+      if (!auth) { err.innerText = 'Firebase não está disponível. Verifique a configuração.'; err.style.display='block'; return; }
+      err.style.display='none';
+      auth.createUserWithEmailAndPassword(e, p).catch(er => { console.error(er); err.innerText = er.message; err.style.display='block'; });
+    }
+
+    function handleLogout() {
+      if (auth) auth.signOut().then(() => alert("Você saiu!")).catch(console.error);
+    }
+
+    function saveData() {
+      localStorage.setItem('jc_fin_v7', JSON.stringify(state));
+      syncToFirebase();
+    }
+
+    async function syncToFirebase() {
+      if (!firebaseReady || !db || !currentUser) {
+        setSyncStatus('📱 Salvo neste aparelho. Faça login para sincronizar.', 'normal');
+        return false;
+      }
+      const ref = getFirebaseDocRef();
+      if (!ref) return false;
+      try {
+        setSyncStatus('☁️ Salvando na nuvem...', 'normal');
+        await ref.set({ ...state, updatedAt: Date.now(), ownerUid: currentUser.uid }, { merge: true });
+        setSyncStatus('☁️ Sincronizado com a nuvem', 'ok');
+        return true;
+      } catch (e) {
+        console.error('Erro ao salvar no Firebase:', e);
+        setSyncStatus(`❌ Erro de sincronização: ${e.code || 'verifique o Firebase'}`, 'error');
+        return false;
+      }
+    }
+
+    function initFirebaseListener() {
+      if (!firebaseReady || !db || !currentUser) return;
+
+      const ref = getFirebaseDocRef();
+      if (!ref) return;
+      const path = ref.path;
+
+      if (unsubscribe && activeFirebasePath === path) return;
+      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+      activeFirebasePath = path;
+      setSyncStatus('☁️ Carregando dados da nuvem...', 'normal');
+
+      unsubscribe = ref.onSnapshot(async doc => {
+        try {
+          if (doc.exists) {
+            const normalized = normalizeState(doc.data());
+            if (normalized) {
+              const previousFamilyCode = state.familyCode || '';
+              Object.assign(state, normalized);
+              localStorage.setItem('jc_fin_v7', JSON.stringify(state));
+              render();
+
+              // Se o documento do usuário revelou um código de família, troca imediatamente
+              // para o documento compartilhado correto.
+              if (!previousFamilyCode && state.familyCode && !path.startsWith('financas_casal/')) {
+                initFirebaseListener();
+                return;
+              }
+            }
+            setSyncStatus('☁️ Sincronizado com a nuvem', 'ok');
+          } else {
+            // Nunca substitui dados da nuvem por um estado vazio sem confirmação.
+            if (hasMeaningfulLocalData()) {
+              await syncToFirebase();
+            } else {
+              await ref.set({ ...state, updatedAt: Date.now(), ownerUid: currentUser.uid }, { merge: true });
+              setSyncStatus('☁️ Conta criada e sincronizada', 'ok');
+            }
+          }
+        } catch (e) {
+          console.error('Erro ao ler dados do Firebase:', e);
+          setSyncStatus(`❌ Erro ao ler a nuvem: ${e.code || 'verifique as regras'}`, 'error');
+        }
+      }, error => {
+        console.error('Erro no listener do Firebase:', error);
+        setSyncStatus(`❌ Firebase recusou o acesso: ${error.code || 'verifique as regras'}`, 'error');
+      });
+    }
 
     function toggleTheme() { state.theme = state.theme === 'dark' ? 'light' : 'dark'; document.body.setAttribute('data-theme', state.theme); saveData(); }
     if(state.theme) document.body.setAttribute('data-theme', state.theme);
